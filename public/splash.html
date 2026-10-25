@@ -6,7 +6,7 @@
 <title>Mobility — splash</title>
 <style>
   html, body { margin: 0; height: 100%; background: #2D2D2D; overflow: hidden; }
-  canvas { display: block; width: 100vw; height: 100vh; }
+  canvas { display: block; }
 </style>
 </head>
 <body>
@@ -81,14 +81,21 @@
     }
   }
 
+  let sizeKey = '';
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
+    const w = innerWidth;
+    const h = innerHeight >= innerWidth ? Math.max(innerHeight, screen.height) : innerHeight;
+    if (`${w}x${h}` === sizeKey) return false;
+    sizeKey = `${w}x${h}`;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
     for (const c of [canvas, patLayer, fxLayer]) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
     S = Math.max(canvas.width / DW, canvas.height / DH);
     OX = (canvas.width - DW * S) / 2; OY = (canvas.height - DH * S) / 2;
     U = S * K;
     buildTiles();
+    return true;
   }
 
   function quad(g, x, y, w, h, m) {
@@ -162,7 +169,7 @@
   }
 
   resize();
-  addEventListener('resize', () => { resize(); renderAt(last); });
+  addEventListener('resize', () => { if (resize()) renderAt(last); });
   window.renderAt = renderAt;
   window.SPLASH_DURATION = T_END;
 

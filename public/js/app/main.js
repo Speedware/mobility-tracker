@@ -34,19 +34,24 @@ startRouter({
 });
 
 const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
-function syncAppHeight() {
-  const portrait = innerHeight >= innerWidth;
-  const h = standalone && portrait ? Math.max(innerHeight, screen.height) : innerHeight;
-  document.documentElement.style.setProperty('--app-h', `${h}px`);
+
+function nudgeViewport() {
+  if (!standalone || innerHeight >= screen.height || innerWidth > innerHeight) return;
+  const body = document.body.style;
+  body.minHeight = 'calc(100vh + 2px)';
+  window.scrollTo(0, 1);
+  requestAnimationFrame(() => {
+    window.scrollTo(0, 0);
+    body.minHeight = '';
+  });
 }
-document.documentElement.classList.toggle('standalone', standalone);
-syncAppHeight();
-addEventListener('resize', syncAppHeight);
-addEventListener('orientationchange', syncAppHeight);
 
 showSplash();
 await Promise.all([loadSession(), fontsReady()]);
 if (state.activeRental && ['/', '/bikes'].includes(currentPath())) {
   history.replaceState(null, '', url(`/bike/${state.activeRental.bikeId}`));
 }
-render();
+await render();
+nudgeViewport();
+setTimeout(nudgeViewport, 400);
+addEventListener('pageshow', nudgeViewport);
