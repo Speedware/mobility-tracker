@@ -1,8 +1,8 @@
-import { $app, toast, confirmDialog } from '../../core/ui.js';
+import { $app, toast, confirmDialog, onTap } from '../../core/ui.js';
 import { api } from '../../core/api.js';
 import { state } from '../../core/state.js';
 import { esc, rub, since, between } from '../../core/format.js';
-import { go, url, onLeave, leaveScreen } from '../../core/router.js';
+import { go, onLeave, leaveScreen } from '../../core/router.js';
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'];
 const KEY_LABELS = { 'C': 'Очистить', '⌫': 'Стереть' };
@@ -31,7 +31,7 @@ export async function screenFinish() {
       </div>
       <div class="actions">
         <button class="btn btn-primary" id="confirm">Завершить аренду</button>
-        <a class="btn btn-outline" href="${url(`/bike/${bike.id}`)}">Назад</a>
+        <button class="btn btn-outline" id="back">Назад</button>
       </div>
     </section>`;
 
@@ -48,7 +48,8 @@ export async function screenFinish() {
     else if (value.length < 4) value = (value + k).replace(/^0+(?=\d)/, '');
     update();
   };
-  $app.querySelectorAll('.key').forEach(el => { el.onclick = () => press(el.dataset.key); });
+  $app.querySelectorAll('.key').forEach(el => onTap(el, () => press(el.dataset.key)));
+  onTap(document.getElementById('back'), () => go(`/bike/${bike.id}`));
 
   const onKey = e => {
     if (/^\d$/.test(e.key)) press(e.key);
@@ -60,7 +61,7 @@ export async function screenFinish() {
   update();
 
   const confirmBtn = document.getElementById('confirm');
-  confirmBtn.onclick = async () => {
+  onTap(confirmBtn, async () => {
     const orders = Number(value || 0);
     if (orders === 0 && !await confirmDialog({
       title: 'Завершить без заказов?', text: 'Сумма аренды будет 0 ₽.', ok: 'Завершить',
@@ -75,7 +76,7 @@ export async function screenFinish() {
       toast(e.message, true);
       confirmBtn.disabled = false;
     }
-  };
+  });
 }
 
 function showReport(bike, r) {
@@ -89,6 +90,7 @@ function showReport(bike, r) {
         <div class="row"><span>Тариф</span><span>Flex ${r.rate} ₽ × ${r.orders}</span></div>
         <div class="row total"><span>Итого</span><span>${rub(r.total)}</span></div>
       </div>
-      <div class="actions"><a class="btn btn-primary" href="${url('/bikes')}">Готово</a></div>
+      <div class="actions"><button class="btn btn-primary" id="done">Готово</button></div>
     </section>`;
+  onTap(document.getElementById('done'), () => go('/bikes'));
 }

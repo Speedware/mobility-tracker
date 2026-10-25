@@ -51,14 +51,15 @@ export function confirmDialog({ title, text = '', ok = 'Да', cancel = 'Отм�
         <h2></h2>
         ${text ? '<p class="modal-lead"></p>' : ''}
         <div class="modal-actions">
-          <button class="btn btn-outline" type="button" data-close>${cancel}</button>
+          <button class="btn btn-outline" type="button" data-cancel>${cancel}</button>
           <button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" type="button" data-ok>${ok}</button>
         </div>
       </div>`, { onClose: () => resolve(result) });
     card.querySelector('h2').textContent = title;
     if (text) card.querySelector('.modal-lead').textContent = text;
     const okBtn = card.querySelector('[data-ok]');
-    okBtn.onclick = () => { result = true; close(); };
+    onTap(okBtn, () => { result = true; close(); });
+    onTap(card.querySelector('[data-cancel]'), close);
     okBtn.focus();
   });
 }
@@ -86,6 +87,24 @@ export function stopLoading() {
   if (loading) return;
   clearTimeout(loaderTimer);
   loaderEl?.classList.remove('on');
+}
+
+export function onTap(el, fn) {
+  let startX = 0, startY = 0, moved = false;
+  el.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY; moved = false;
+  }, { passive: true });
+  el.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    if (Math.hypot(t.clientX - startX, t.clientY - startY) > 10) moved = true;
+  }, { passive: true });
+  el.addEventListener('touchend', e => {
+    if (moved || el.disabled) return;
+    e.preventDefault();
+    fn(e);
+  });
+  el.addEventListener('click', fn);
 }
 
 export function onSubmit(form, handler) {
