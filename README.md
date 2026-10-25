@@ -13,6 +13,8 @@ PORT=8080 npm start
 ADMIN_EMAIL=owner@example.com npm start
 ```
 
+Запуск на сервере с HTTPS, автозапуском и резервными копиями — в [deploy/README.md](deploy/README.md).
+
 База создаётся автоматически в `data/mobility.db`; байки добавляются при первом запуске.
 
 ## Адреса
@@ -31,6 +33,8 @@ ADMIN_EMAIL=owner@example.com npm start
 ## Структура
 
 ```
+deploy/              файлы для сервера: systemd, Caddy, бэкап, обновление
+
 server/
   index.js            HTTP-сервер: /api/* → маршруты, остальное → статика
   config.js           настройки (порт, почта владельца, лимиты)

@@ -16,7 +16,9 @@ function checkPassword(password, stored) {
 }
 
 const sessionToken = req => /(?:^|;\s*)sid=([a-f0-9]{64})/.exec(req.headers.cookie || '')?.[1] || null;
-const sessionCookie = (token, maxAge) => `sid=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
+const isHttps = req => req.headers['x-forwarded-proto'] === 'https';
+const sessionCookie = (req, token, maxAge) =>
+  `sid=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${isHttps(req) ? '; Secure' : ''}`;
 
 function createSession(userId) {
   const token = crypto.randomBytes(32).toString('hex');
@@ -36,16 +38,16 @@ function currentUser(req) {
 const isAdmin = u => !!u && u.email.toLowerCase() === ADMIN_EMAIL;
 const publicUser = u => ({ id: u.id, name: u.name, email: u.email, photo: u.photo, isAdmin: isAdmin(u) });
 
-function signIn(res, user, status = 200) {
+function signIn(req, res, user, status = 200) {
   send(res, status, { user: publicUser(user) }, {
-    'Set-Cookie': sessionCookie(createSession(user.id), SESSION_DAYS * 86400),
+    'Set-Cookie': sessionCookie(req, createSession(user.id), SESSION_DAYS * 86400),
   });
 }
 
 function signOut(req, res) {
   const token = sessionToken(req);
   if (token) db.prepare('DELETE FROM sessions WHERE token = ?').run(token);
-  send(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie('', 0) });
+  send(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie(req, '', 0) });
 }
 
 function dropSessions(userId, keepToken = '') {

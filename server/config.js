@@ -4,6 +4,7 @@ const ROOT = path.join(__dirname, '..');
 
 module.exports = {
   PORT: Number(process.env.PORT) || 3000,
+  HOST: process.env.HOST || '0.0.0.0',
   ROOT,
   PUBLIC_DIR: path.join(ROOT, 'public'),
   DATA_DIR: path.join(ROOT, 'data'),

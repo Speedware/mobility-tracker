@@ -1,0 +1,25 @@
+[Unit]
+Description=Mobility rental tracker
+After=network.target
+
+[Service]
+Type=simple
+User=mobility
+Group=mobility
+WorkingDirectory=/opt/mobility-tracker
+ExecStart=/usr/bin/node server/index.js
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=3000
+Environment=ADMIN_EMAIL=antonraseperin@gmail.com
+Restart=always
+RestartSec=3
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/mobility-tracker/data
+
+[Install]
+WantedBy=multi-user.target

@@ -18,7 +18,7 @@ module.exports = route => {
     if (db.prepare('SELECT 1 FROM users WHERE email = ?').get(email)) throw new HttpError(409, 'Эта почта уже зарегистрирована');
     const { lastInsertRowid } = db.prepare('INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)')
       .run(name, email, hashPassword(password));
-    signIn(res, db.prepare('SELECT * FROM users WHERE id = ?').get(lastInsertRowid), 201);
+    signIn(req, res, db.prepare('SELECT * FROM users WHERE id = ?').get(lastInsertRowid), 201);
   }, { public: true });
 
   route('POST', '/api/login', async (req, res) => {
@@ -29,7 +29,7 @@ module.exports = route => {
     }
     if (user.blocked) throw new HttpError(403, 'Учётная запись заблокирована');
     if (b.admin && !isAdmin(user)) throw new HttpError(403, 'Нет доступа к панели управления');
-    signIn(res, user);
+    signIn(req, res, user);
   }, { public: true });
 
   route('POST', '/api/logout', (req, res) => signOut(req, res), { public: true });
