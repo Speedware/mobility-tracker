@@ -1,0 +1,12 @@
+{
+  "name": "mobility-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Мобилити — трекер аренды байков",
+  "main": "server/index.js",
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  }
+}

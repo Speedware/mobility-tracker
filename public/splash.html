@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mobility — splash</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #2D2D2D; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+</style>
+</head>
+<body>
+<canvas id="splash"></canvas>
+<script>
+(function () {
+  const BG = '#2D2D2D', YELLOW = '#F7D049', WHITE = '#FFFFFF', LINE = '#8C7A3C';
+  const STROKE = 2.2;
+
+  const DW = 540, DH = 1170, CX = DW / 2, CY = DH / 2;
+
+  const K = 1.9;
+  const PX = 36, PY = 72;
+  const PW = 27, PH = 54;
+  const M_PTS = [[81,0],[108,0],[130.5,27],[139.5,27],[162,0],[189,0],[189,90],[162,90],[162,36],[139.5,63],[130.5,63],[108,36],[108,90],[81,90]];
+
+  const T_STOP = 1.5, T_FILL = 1.75, T_GROW = 2.05, T_HOLD = 2.75, T_END = 4.4;
+  const SHUTTER = 0.75 / 60;
+
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const easeOut = t => 1 - Math.pow(1 - t, 3);
+  const easeInOut = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const map = (x, y, m) => [m.s * (x - 0.5 * y) + m.tx, m.s * y + m.ty];
+
+  const GRID = { s: K,    tx: CX - K * 9,     ty: CY - K * 45 };
+  const BIG  = { s: 2.6,  tx: CX - 2.6 * 9,   ty: CY - 2.6 * 45 };
+  const FIN  = { s: 1.25, tx: CX - 1.25 * 72, ty: CY - 1.25 * 45 };
+
+  const inv = (X, Y) => { const y = (Y - GRID.ty) / GRID.s; return [(X - GRID.tx) / GRID.s + 0.5 * y, y]; };
+  const cs = [[0, 0], [DW, 0], [0, DH], [DW, DH]].map(p => inv(p[0], p[1]));
+  const minX = Math.min(...cs.map(c => c[0])) - PX * 2, maxX = Math.max(...cs.map(c => c[0])) + PX * 2;
+  const Y0 = Math.min(...cs.map(c => c[1])) - PY * 2, Y1 = Math.max(...cs.map(c => c[1])) + PY * 2;
+  const lanes = [];
+  const c0 = Math.floor(minX / PX), c1 = Math.ceil(maxX / PX);
+  for (let c = c0; c <= c1; c++) lanes.push({ c, rows: 3 + Math.round((c - c0) * 0.5), yoff: Math.abs(c) % 2 ? 36 : 0 });
+  const laneOffset = (l, t) => -l.rows * PY * (1 - easeOut(clamp(t / T_STOP)));
+  const laneSpeed = (l, t) => (t >= T_STOP ? 0 : l.rows * PY * 3 * Math.pow(1 - t / T_STOP, 2) / T_STOP);
+  const laneOf = c => lanes.find(l => l.c === c);
+
+  const canvas = document.getElementById('splash');
+  const ctx = canvas.getContext('2d');
+  const patLayer = document.createElement('canvas'), pctx = patLayer.getContext('2d');
+  const fxLayer = document.createElement('canvas'), fctx = fxLayer.getContext('2d');
+  let S = 1, OX = 0, OY = 0, U = 1, last = 0;
+  let tiles = [], BUCKET = 1;
+
+  function buildTiles() {
+    const thPx = Math.max(8, Math.round(PY * U)), twPx = Math.round(33 * U);
+    const k = PY / thPx;
+    const base = document.createElement('canvas'); base.width = twPx; base.height = thPx;
+    const b = base.getContext('2d');
+    b.strokeStyle = LINE; b.lineWidth = STROKE * S * k;
+    b.setTransform(1 / k, 0, 0, 1 / k, 0, 0);
+    b.strokeRect(3, 0, PW, PH);
+    b.strokeRect(3, PY, PW, PH); b.strokeRect(3, -PY, PW, PH);
+    const maxBlur = (3 + Math.round((c1 - c0) * 0.5)) * PY * 3 / T_STOP * SHUTTER;
+    BUCKET = Math.max(1, maxBlur / 16);
+    tiles = [];
+    for (let i = 0; i <= 16; i++) {
+      const L = i * BUCKET * U;
+      const cv = document.createElement('canvas'); cv.width = twPx; cv.height = thPx;
+      const g = cv.getContext('2d');
+      const n = Math.max(1, Math.ceil(L / 1.2));
+      g.globalCompositeOperation = 'lighter'; g.globalAlpha = 1 / n;
+      for (let j = 0; j < n; j++) {
+        const o = n === 1 ? 0 : (j / (n - 1) - 0.5) * L;
+        for (const w of [-thPx, 0, thPx]) g.drawImage(base, 0, o + w);
+      }
+      const pat = ctx.createPattern(cv, 'repeat');
+      tiles.push({ pat, k });
+    }
+  }
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
+    for (const c of [canvas, patLayer, fxLayer]) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+    S = Math.max(canvas.width / DW, canvas.height / DH);
+    OX = (canvas.width - DW * S) / 2; OY = (canvas.height - DH * S) / 2;
+    U = S * K;
+    buildTiles();
+  }
+
+  function quad(g, x, y, w, h, m) {
+    const p = [map(x, y, m), map(x + w, y, m), map(x + w, y + h, m), map(x, y + h, m)];
+    g.moveTo(p[0][0], p[0][1]); for (let i = 1; i < 4; i++) g.lineTo(p[i][0], p[i][1]); g.closePath();
+  }
+
+  function boltMatrix(t) {
+    if (t < T_GROW) return GRID;
+    if (t < T_GROW + 0.55) { const u = easeInOut(clamp((t - T_GROW) / 0.55)); return { s: lerp(GRID.s, BIG.s, u), tx: lerp(GRID.tx, BIG.tx, u), ty: lerp(GRID.ty, BIG.ty, u) }; }
+    if (t < T_HOLD) return BIG;
+    const u = easeInOut(clamp((t - T_HOLD) / 0.55)); return { s: lerp(BIG.s, FIN.s, u), tx: lerp(BIG.tx, FIN.tx, u), ty: lerp(BIG.ty, FIN.ty, u) };
+  }
+
+  function drawMarks(g, t, alpha) {
+    const m = boltMatrix(t);
+    const d0 = laneOffset(laneOf(0), t), d1 = laneOffset(laneOf(1), t);
+    const fill = clamp((t - T_STOP) / (T_FILL + 0.3 - T_STOP));
+    if (t >= T_STOP) {
+      g.beginPath(); quad(g, 0, d0, PW, PH, m); quad(g, 36, 36 + d1, PW, PH, m);
+      if (fill < 1) { g.globalAlpha = alpha * (1 - fill); g.strokeStyle = LINE; g.lineWidth = STROKE; g.stroke(); }
+      if (fill > 0) { g.globalAlpha = alpha * fill; g.fillStyle = YELLOW; g.fill(); }
+    }
+    const mt = clamp((t - (T_HOLD + 0.22)) / 0.55);
+    if (mt > 0) {
+      const shift = (1 - easeOut(mt)) * 112;
+      g.globalAlpha = alpha * clamp(mt * 2.2); g.fillStyle = WHITE; g.beginPath();
+      M_PTS.forEach(([x, y], i) => { const [X, Y] = map(x, y - shift, FIN); i ? g.lineTo(X, Y) : g.moveTo(X, Y); });
+      g.closePath(); g.fill();
+    }
+  }
+
+  function renderAt(t) {
+    last = t = clamp(t, 0, T_END);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = BG; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const patAlpha = 1 - clamp((t - T_FILL) / (T_GROW + 0.25 - T_FILL));
+    if (patAlpha > 0) {
+      pctx.setTransform(1, 0, 0, 1, 0, 0); pctx.clearRect(0, 0, patLayer.width, patLayer.height);
+      pctx.setTransform(U, 0, -0.5 * U, U, OX + S * GRID.tx, OY + S * GRID.ty);
+      for (const l of lanes) {
+        const blur = laneSpeed(l, t) * SHUTTER;
+        const tile = tiles[Math.min(16, Math.round(blur / BUCKET))];
+        const x = l.c * PX - 3, y = l.yoff + laneOffset(l, t);
+        tile.pat.setTransform(new DOMMatrix().translate(x, y).scale(tile.k));
+        pctx.fillStyle = tile.pat;
+        pctx.fillRect(x, Y0, 33, Y1 - Y0);
+      }
+      if (t >= T_STOP) {
+        pctx.globalCompositeOperation = 'destination-out';
+        pctx.setTransform(S, 0, 0, S, OX, OY);
+        pctx.beginPath(); quad(pctx, -2, -2, PW + 4, PH + 4, GRID); quad(pctx, 34, 34, PW + 4, PH + 4, GRID); pctx.fill();
+        pctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.globalAlpha = patAlpha; ctx.drawImage(patLayer, 0, 0); ctx.globalAlpha = 1;
+    }
+
+    const moving = t < T_FILL + 0.3 || (t > T_GROW && t < T_GROW + 0.6) || (t > T_HOLD && t < T_HOLD + 0.8);
+    const n = moving ? 6 : 1;
+    fctx.setTransform(1, 0, 0, 1, 0, 0); fctx.clearRect(0, 0, fxLayer.width, fxLayer.height);
+    fctx.setTransform(S, 0, 0, S, OX, OY);
+    fctx.globalCompositeOperation = 'lighter';
+    for (let k = 0; k < n; k++) {
+      const ts = n === 1 ? t : clamp(t + (k / (n - 1) - 0.5) * SHUTTER, 0, T_END);
+      drawMarks(fctx, ts, 1 / n);
+    }
+    fctx.globalCompositeOperation = 'source-over'; fctx.globalAlpha = 1;
+    ctx.drawImage(fxLayer, 0, 0);
+  }
+
+  resize();
+  addEventListener('resize', () => { resize(); renderAt(last); });
+  window.renderAt = renderAt;
+  window.SPLASH_DURATION = T_END;
+
+  if (/capture/.test(location.hash)) { renderAt(0); return; }
+  const loop = /loop/.test(location.hash);
+  let t0 = null, done = false;
+  function tick(now) {
+    if (t0 === null) t0 = now;
+    let t = (now - t0) / 1000;
+    if (loop) t %= T_END + 0.8;
+    renderAt(t);
+    if (!loop && t >= T_END) {
+      if (!done) { done = true; dispatchEvent(new Event('splashend')); }
+      return;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
