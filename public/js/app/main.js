@@ -33,6 +33,17 @@ startRouter({
   afterRender: slideTabIndicator,
 });
 
+const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+function syncAppHeight() {
+  const portrait = innerHeight >= innerWidth;
+  const h = standalone && portrait ? Math.max(innerHeight, screen.height) : innerHeight;
+  document.documentElement.style.setProperty('--app-h', `${h}px`);
+}
+document.documentElement.classList.toggle('standalone', standalone);
+syncAppHeight();
+addEventListener('resize', syncAppHeight);
+addEventListener('orientationchange', syncAppHeight);
+
 showSplash();
 await Promise.all([loadSession(), fontsReady()]);
 if (state.activeRental && ['/', '/bikes'].includes(currentPath())) {

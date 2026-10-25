@@ -82,7 +82,7 @@
   }
 
   function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
     for (const c of [canvas, patLayer, fxLayer]) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
     S = Math.max(canvas.width / DW, canvas.height / DH);
@@ -149,7 +149,7 @@
     }
 
     const moving = t < T_FILL + 0.3 || (t > T_GROW && t < T_GROW + 0.6) || (t > T_HOLD && t < T_HOLD + 0.8);
-    const n = moving ? 6 : 1;
+    const n = moving ? 4 : 1;
     fctx.setTransform(1, 0, 0, 1, 0, 0); fctx.clearRect(0, 0, fxLayer.width, fxLayer.height);
     fctx.setTransform(S, 0, 0, S, OX, OY);
     fctx.globalCompositeOperation = 'lighter';
