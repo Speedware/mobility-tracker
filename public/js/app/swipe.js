@@ -13,8 +13,10 @@ export function setupSwipe(track, onDone) {
     label.style.opacity = String(1 - x / max());
   };
 
+  const SETTLE_MS = 260;
   const finish = async () => {
     track.classList.add('busy');
+    await new Promise(r => setTimeout(r, SETTLE_MS));
     try { await onDone(); }
     catch (e) { toast(e.message, true); track.classList.remove('busy'); set(0, true); }
   };
@@ -25,7 +27,8 @@ export function setupSwipe(track, onDone) {
     knob.setPointerCapture(e.pointerId);
   });
   knob.addEventListener('pointermove', e => { if (dragging) set(e.clientX - startX, false); });
-  const end = () => {
+  const end = e => {
+    if (knob.hasPointerCapture?.(e.pointerId)) knob.releasePointerCapture(e.pointerId);
     if (!dragging) return;
     dragging = false;
     if (x >= max() * 0.85) { set(max(), true); finish(); } else set(0, true);
