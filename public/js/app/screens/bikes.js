@@ -8,16 +8,18 @@ import { tabbar } from '../tabbar.js';
 const bikeCard = (b, activeRental) => {
   const locked = (b.busy && !b.mine) || (activeRental && !b.mine);
   const tag = b.mine
-    ? `<span class="tag tag-mine">Ваша аренда · <span data-since="${b.rental.startedAt}">${since(b.rental.startedAt)}</span></span>`
+    ? `<span class="tag tag-mine" data-since="${b.rental.startedAt}" aria-label="Ваша аренда">${since(b.rental.startedAt)}</span>`
     : b.busy ? '<span class="tag tag-busy">Занят</span>' : '';
   const inner = `
     <div>
       <div class="name">${esc(b.name)}</div>
       <div class="spec">Скорость до ${b.speed} km/h</div>
       <div class="spec-2">Батарея ${esc(b.battery)}</div>
-      ${tag ? `<div class="tags">${tag}</div>` : ''}
     </div>
-    <div class="rate">Flex ${b.rate} ₽</div>`;
+    <div class="side">
+      <div class="rate">Flex ${b.rate} ₽</div>
+      ${tag}
+    </div>`;
   return locked
     ? `<button class="bike-card" disabled>${inner}</button>`
     : `<a class="bike-card" href="${url(`/bike/${b.id}`)}">${inner}</a>`;
