@@ -8,11 +8,11 @@ body { background: #1C1C1C; }
 .swipe, .part { -webkit-user-select: none; user-select: none; }
 
 .screen { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
-.with-tabs > .sheet, .with-tabs > .bike-sheet { padding-bottom: calc(118px + var(--safe-b)); }
+.with-tabs > .sheet, .with-tabs > .bike-sheet { padding-bottom: calc(max(30px, var(--safe-b) + 16px) + 82px); }
 
 .top {
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: calc(clamp(24px, 8dvh, 72px) + var(--safe-t)) 28px clamp(18px, 4dvh, 36px);
+  padding: max(clamp(24px, 8dvh, 72px), calc(var(--safe-t) + 14px)) 28px clamp(18px, 4dvh, 36px);
 }
 .top h1 { margin: 0; font-size: clamp(30px, 9.5vw, 38px); font-weight: 400; letter-spacing: -0.5px; line-height: 1.1; }
 .yellow-top { background: var(--yellow); }
@@ -21,7 +21,7 @@ body { background: #1C1C1C; }
   flex: 1; background: var(--bg); border-radius: 40px 40px 0 0;
   padding: clamp(22px, 4.5dvh, 36px) clamp(16px, 6vw, 24px) 32px;
 }
-.actions { margin-top: auto; padding: clamp(14px, 3dvh, 24px) 28px calc(clamp(16px, 4dvh, 32px) + var(--safe-b)); }
+.actions { margin-top: auto; padding: clamp(14px, 3dvh, 24px) 28px max(clamp(16px, 4dvh, 32px), calc(var(--safe-b) + 8px)); }
 .btn-pill {
   border: 2px solid var(--yellow); background: transparent; color: var(--yellow);
   border-radius: 10px; padding: 6px 18px; font-weight: 500; font-size: 16px; white-space: nowrap; text-decoration: none;
@@ -31,7 +31,7 @@ body { background: #1C1C1C; }
   background: linear-gradient(180deg, var(--yellow-2) 0%, #F2C94A 22%, #8A7A45 52%, var(--bg) 68%);
   text-align: center;
 }
-.welcome .brand { padding: calc(clamp(40px, 12dvh, 104px) + var(--safe-t)) 32px 0; }
+.welcome .brand { padding: max(clamp(40px, 12dvh, 104px), calc(var(--safe-t) + 40px)) 32px 0; }
 .welcome .brand img { width: 100%; max-width: 330px; display: block; margin: 0 auto; }
 .welcome .brand p { margin: 6px 0 0; color: var(--ink); font-size: 15px; }
 .welcome .hero { flex: 1; display: flex; align-items: center; justify-content: center; padding: 8px 12px; }
@@ -194,7 +194,7 @@ body { background: #1C1C1C; }
   .calc-display .num { font-size: 38px; }
   .calc-display .formula { margin-top: 4px; }
   .key { height: 44px; font-size: 22px; }
-  .top { padding-top: 18px; padding-bottom: 14px; }
+  .top { padding-top: max(18px, calc(var(--safe-t) + 8px)); padding-bottom: 14px; }
   .top h1 { font-size: 28px; }
   .calc-meta, .requests-lead { margin-top: -6px; }
 }
