@@ -21,4 +21,9 @@ export const between = (from, to) => duration(new Date(to) - new Date(from));
 export const fmtDate = iso => new Date(iso).toLocaleString('ru-RU',
   { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
+export const fmtShort = iso => {
+  const d = new Date(iso);
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${pad(d.getFullYear() % 100)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 export const initialsOf = name => name.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();

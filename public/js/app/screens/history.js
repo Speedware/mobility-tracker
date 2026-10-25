@@ -1,6 +1,6 @@
 import { $app } from '../../core/ui.js';
 import { api } from '../../core/api.js';
-import { esc, rub, since, between, fmtDate } from '../../core/format.js';
+import { esc, rub, since, between, fmtShort } from '../../core/format.js';
 import { counted, payTag } from '../../core/domain.js';
 import { tabbar } from '../tabbar.js';
 
@@ -8,7 +8,7 @@ const item = r => `
   <div class="h-item">
     <div>
       <div class="bike">${esc(r.bike)}</div>
-      <div class="meta">${fmtDate(r.startedAt)}${r.endedAt ? ` — ${fmtDate(r.endedAt)}` : ''}<br>
+      <div class="meta">${fmtShort(r.startedAt)}${r.endedAt ? ` - ${fmtShort(r.endedAt)}` : ''}<br>
         ${r.endedAt ? `Время ${between(r.startedAt, r.endedAt)}` : `Идёт · <span data-since="${r.startedAt}">${since(r.startedAt)}</span>`}</div>
     </div>
     <div class="sum">${r.endedAt ? rub(r.total) : '—'}
