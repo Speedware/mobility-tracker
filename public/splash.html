@@ -52,7 +52,7 @@
   const patLayer = document.createElement('canvas'), pctx = patLayer.getContext('2d');
   const fxLayer = document.createElement('canvas'), fctx = fxLayer.getContext('2d');
   let S = 1, OX = 0, OY = 0, U = 1, last = 0;
-  let tiles = [], BUCKET = 1;
+  let tiles = [], BUCKET = 1, lowQuality = false;
 
   function buildTiles() {
     const thPx = Math.max(8, Math.round(PY * U)), twPx = Math.round(33 * U);
@@ -140,7 +140,7 @@
       pctx.setTransform(U, 0, -0.5 * U, U, OX + S * GRID.tx, OY + S * GRID.ty);
       for (const l of lanes) {
         const blur = laneSpeed(l, t) * SHUTTER;
-        const tile = tiles[Math.min(16, Math.round(blur / BUCKET))];
+        const tile = tiles[lowQuality ? 0 : Math.min(16, Math.round(blur / BUCKET))];
         const x = l.c * PX - 3, y = l.yoff + laneOffset(l, t);
         tile.pat.setTransform(new DOMMatrix().translate(x, y).scale(tile.k));
         pctx.fillStyle = tile.pat;
@@ -156,7 +156,7 @@
     }
 
     const moving = t < T_FILL + 0.3 || (t > T_GROW && t < T_GROW + 0.6) || (t > T_HOLD && t < T_HOLD + 0.8);
-    const n = moving ? 4 : 1;
+    const n = moving && !lowQuality ? 4 : 1;
     fctx.setTransform(1, 0, 0, 1, 0, 0); fctx.clearRect(0, 0, fxLayer.width, fxLayer.height);
     fctx.setTransform(S, 0, 0, S, OX, OY);
     fctx.globalCompositeOperation = 'lighter';
@@ -176,8 +176,18 @@
   if (/capture/.test(location.hash)) { renderAt(0); return; }
   const loop = /loop/.test(location.hash);
   let t0 = null, done = false;
+  let prevFrame = null;
+  const frameTimes = [];
   function tick(now) {
     if (t0 === null) t0 = now;
+    if (prevFrame !== null && !lowQuality && frameTimes.length < 12) {
+      frameTimes.push(now - prevFrame);
+      if (frameTimes.length === 12) {
+        const sorted = [...frameTimes].sort((a, b) => a - b);
+        lowQuality = sorted[6] > 22;
+      }
+    }
+    prevFrame = now;
     let t = (now - t0) / 1000;
     if (loop) t %= T_END + 0.8;
     renderAt(t);

@@ -181,6 +181,14 @@ body { background: #1C1C1C; }
 
 @media (prefers-reduced-motion: reduce) { .tab-indicator { transition: none; } }
 
+.standalone, .standalone body { height: var(--app-h); overflow: hidden; }
+.standalone #app { height: var(--app-h); min-height: 0; overflow: hidden; }
+.standalone .screen { height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.standalone .tabbar { position: absolute; }
+.standalone .splash,
+.standalone .modal,
+.standalone .loader { position: absolute; inset: auto; top: 0; left: 0; width: 100%; height: var(--app-h); }
+
 @media (max-height: 700px) {
   .part { flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; min-height: 0; height: clamp(50px, 9dvh, 60px); }
   .part svg { width: 26px; height: 26px; flex: none; }
