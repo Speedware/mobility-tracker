@@ -16,7 +16,7 @@ const ENTRIES = [
 const entryFor = pathname => ENTRIES.find(e => pathname === e.prefix || pathname.startsWith(`${e.prefix}/`));
 
 function renderEntry(file) {
-  return fs.readFileSync(file, 'utf8').replace(/(href|src)="(\/(?:css|js)\/[^"?]+)"/g, (m, attr, url) => {
+  return fs.readFileSync(file, 'utf8').replace(/(href|src)="(\/(?:(?:css|js|icons|assets)\/[^"?]+|manifest\.webmanifest))"/g, (m, attr, url) => {
     const target = path.join(PUBLIC_DIR, url);
     const v = fs.existsSync(target) ? Math.floor(fs.statSync(target).mtimeMs) : 0;
     return `${attr}="${url}?v=${v}"`;
