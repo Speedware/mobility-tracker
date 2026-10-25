@@ -26,6 +26,8 @@ button, a, input, select, textarea, label { touch-action: manipulation; }
 button, .key { -webkit-user-select: none; user-select: none; }
 button, input, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
 a { color: inherit; }
 
 .loader {
@@ -66,6 +68,7 @@ a { color: inherit; }
 }
 .field::placeholder { color: #DADADA; }
 .field:focus { border-color: var(--yellow); }
+.field:focus-visible { outline: none; }
 textarea.field { height: clamp(64px, 11dvh, 96px); padding: 12px 14px; resize: none; line-height: 1.4; }
 .label { font-size: 13px; color: var(--muted); margin: 4px 0 -6px; }
 

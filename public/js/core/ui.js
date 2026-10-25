@@ -60,7 +60,7 @@ export function confirmDialog({ title, text = '', ok = 'Да', cancel = 'Отм�
     const okBtn = card.querySelector('[data-ok]');
     onTap(okBtn, () => { result = true; close(); });
     onTap(card.querySelector('[data-cancel]'), close);
-    okBtn.focus();
+    if (matchMedia('(hover: hover)').matches) okBtn.focus();
   });
 }
 
