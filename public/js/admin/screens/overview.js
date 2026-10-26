@@ -1,6 +1,6 @@
 import { api } from '../../core/api.js';
 import { state } from '../../core/state.js';
-import { esc, rub, since, between, fmtDate, shortName } from '../../core/format.js';
+import { esc, rub, since, between, fmtShort, shortName } from '../../core/format.js';
 import { statusIcon } from '../../core/status.js';
 import { payTag, BIKE_AVAILABILITY } from '../../core/domain.js';
 import { deskShell, autoRefresh } from '../shell.js';
@@ -24,12 +24,13 @@ const bikeTile = b => {
 };
 
 const recentRow = r => `<tr>
-  <td>${esc(r.userName)}<small>${fmtDate(r.startedAt)}</small></td>
-  <td>${esc(r.bike)}</td>
-  <td class="nowrap">${r.endedAt ? between(r.startedAt, r.endedAt)
-    : `<span class="tag tag-busy">идёт</span><small data-since="${r.startedAt}">${since(r.startedAt)}</small>`}</td>
-  <td class="num">${r.endedAt ? `${rub(r.total)}<small>${r.orders} зак.</small>` : '—'}</td>
-  <td class="num">${r.endedAt ? payTag(r) : ''}</td>
+  <td class="nowrap">${esc(shortName(r.userName))}</td>
+  <td><b class="y">${esc(r.bike)}</b></td>
+  <td class="nowrap">${fmtShort(r.startedAt)} - ${fmtShort(r.endedAt)}</td>
+  <td class="nowrap">${between(r.startedAt, r.endedAt)}</td>
+  <td class="num">${r.orders}</td>
+  <td class="num"><b>${rub(r.total)}</b></td>
+  <td class="num">${payTag(r)}</td>
 </tr>`;
 
 export async function deskOverview() {
@@ -53,9 +54,9 @@ export async function deskOverview() {
         <h2 class="desk-h2">Последние аренды</h2>
         <div class="d-card">
           ${data.recent.length ? `<table class="d-table">
-            <thead><tr><th>Курьер</th><th>Байк</th><th>Время</th><th class="num">Сумма</th><th class="num">Оплата</th></tr></thead>
+            <thead><tr><th>Курьер</th><th>Байк</th><th>Период</th><th>Время</th><th class="num">Заказов</th><th class="num">Сумма</th><th class="num">Оплата</th></tr></thead>
             <tbody>${data.recent.map(recentRow).join('')}</tbody>
-          </table>` : '<div class="empty">Аренд пока не было</div>'}
+          </table>` : '<div class="empty">Завершённых аренд пока нет</div>'}
         </div>
       </section>
     </div>`,

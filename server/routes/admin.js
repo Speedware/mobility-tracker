@@ -16,7 +16,8 @@ module.exports = route => {
     const recent = db.prepare(`
       SELECT ${RENTAL_FIELDS}, u.name AS userName
       FROM rentals r JOIN bikes b ON b.id = r.bike_id JOIN users u ON u.id = r.user_id
-      ORDER BY r.started_at DESC LIMIT 5`).all().map(rentalRow);
+      WHERE r.ended_at IS NOT NULL
+      ORDER BY r.ended_at DESC LIMIT 5`).all().map(rentalRow);
     send(res, 200, { bikes: bikeList(user.id, { includeHidden: true, personal: false }), today: statsSince(today), month: statsSince(month), recent });
   }, ADMIN);
 
