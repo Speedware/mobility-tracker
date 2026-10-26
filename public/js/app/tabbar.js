@@ -13,7 +13,7 @@ export function tabbar(current) {
   const i = Math.max(0, TABS.findIndex(t => t.path === current));
   const from = lastTab;
   lastTab = i;
-  return `<nav class="tabbar" style="--n:${TABS.length}">
+  return `<div class="tab-fade" aria-hidden="true"></div><nav class="tabbar" style="--n:${TABS.length}">
     <span class="tab-indicator" style="--i:${from}" data-to="${i}"></span>${TABS.map(t => `
     <a href="${url(t.path)}" ${t.path === current ? 'aria-current="page"' : ''}>${t.icon}<span>${t.label}</span></a>`).join('')}</nav>`;
 }

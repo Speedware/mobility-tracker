@@ -151,6 +151,12 @@ body { background: #1C1C1C; }
 .btn-logout { margin-top: 36px; background: transparent; border-color: #4A4A4A; color: var(--danger); }
 .btn-logout svg { width: 20px; height: 20px; }
 
+.tab-fade {
+  position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); z-index: 19;
+  width: 100%; max-width: 480px; pointer-events: none;
+  height: calc(max(30px, var(--safe-b) + 16px) + 110px);
+  background: linear-gradient(to bottom, rgba(18, 18, 18, 0) 0%, rgba(18, 18, 18, .55) 45%, rgba(18, 18, 18, .9) 100%);
+}
 .tabbar {
   position: fixed; left: 50%; transform: translateX(-50%); z-index: 20;
   bottom: max(30px, calc(var(--safe-b) + 16px));
@@ -186,7 +192,7 @@ body { background: #1C1C1C; }
 .standalone, .standalone body { height: var(--app-h); overflow: hidden; }
 .standalone #app { height: var(--app-h); min-height: 0; overflow: hidden; }
 .standalone .screen { height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-.standalone .tabbar { position: absolute; }
+.standalone .tabbar, .standalone .tab-fade { position: absolute; }
 .standalone .splash,
 .standalone .modal,
 .standalone .loader { position: absolute; inset: auto; top: 0; left: 0; width: 100%; height: var(--app-h); }

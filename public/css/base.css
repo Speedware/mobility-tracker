@@ -173,7 +173,7 @@ textarea.field { height: clamp(64px, 11dvh, 96px); padding: 12px 14px; resize: n
 @keyframes page-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes fade-in { from { opacity: 0; } }
 @keyframes pop-in { from { opacity: 0; transform: translateY(8px) scale(.97); } }
-.page-enter > :not(.tabbar):not(.desk-side):not(.desk-burger):not(.desk-scrim) {
+.page-enter > :not(.tabbar):not(.tab-fade):not(.desk-side):not(.desk-burger):not(.desk-scrim) {
   animation: page-in .34s cubic-bezier(.2, .8, .2, 1) both;
 }
 .page-enter > :nth-child(2) { animation-delay: .03s; }
