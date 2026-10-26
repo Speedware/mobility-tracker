@@ -14,6 +14,10 @@ export async function screenBike(id) {
   if (activeRental && activeRental.bikeId !== Number(id)) return go(`/bike/${activeRental.bikeId}`, { replace: true });
   const bike = bikes.find(b => b.id === Number(id));
   if (!bike) return go('/bikes', { replace: true });
+  if (bike.availability !== 'available' && !bike.mine) {
+    toast('Этот байк сейчас недоступен', true);
+    return go('/bikes', { replace: true });
+  }
   if (bike.busy && !bike.mine) {
     toast('Этот байк сейчас в аренде', true);
     return go('/bikes', { replace: true });

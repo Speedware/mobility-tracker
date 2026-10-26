@@ -11,7 +11,8 @@ module.exports = route => {
   route('POST', '/api/rentals', async (req, res, user) => {
     const b = await readJson(req);
     const bike = db.prepare('SELECT * FROM bikes WHERE id = ?').get(Number(b.bikeId));
-    if (!bike) throw new HttpError(404, 'Байк не найден');
+    if (!bike || bike.availability === 'hidden') throw new HttpError(404, 'Байк не найден');
+    if (bike.availability !== 'available') throw new HttpError(409, 'Байк сейчас недоступен');
     if (activeRental(user.id)) throw new HttpError(409, 'У вас уже есть активная аренда');
     if (db.prepare('SELECT 1 FROM rentals WHERE bike_id = ? AND ended_at IS NULL').get(bike.id)) {
       throw new HttpError(409, 'Этот байк уже арендован');

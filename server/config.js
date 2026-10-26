@@ -16,6 +16,7 @@ module.exports = {
   REPAIR_PARTS: ['brakes', 'lights', 'battery', 'throttle', 'mirrors', 'other'],
   COMMENT_MAX: 300,
   PAY_STATUSES: ['pending', 'paid', 'rejected'],
+  BIKE_AVAILABILITY: ['available', 'unavailable', 'hidden'],
   PHOTO_MAX: 2 * 1024 * 1024,
   BODY_MAX: 3 * 1024 * 1024,
 };

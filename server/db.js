@@ -30,7 +30,8 @@ db.exec(`
     battery TEXT NOT NULL,
     rate INTEGER NOT NULL,
     image TEXT NOT NULL,
-    sort INTEGER NOT NULL DEFAULT 0
+    sort INTEGER NOT NULL DEFAULT 0,
+    availability TEXT NOT NULL DEFAULT 'available'
   );
   CREATE TABLE IF NOT EXISTS rentals (
     id INTEGER PRIMARY KEY,
@@ -66,6 +67,7 @@ const addColumn = (table, column, def) => {
 };
 addColumn('users', 'blocked', 'INTEGER NOT NULL DEFAULT 0');
 addColumn('rentals', 'closed_by_block', 'INTEGER NOT NULL DEFAULT 0');
+addColumn('bikes', 'availability', "TEXT NOT NULL DEFAULT 'available'");
 if (addColumn('rentals', 'pay_status', "TEXT NOT NULL DEFAULT 'pending'") && hasColumn('rentals', 'paid')) {
   db.exec("UPDATE rentals SET pay_status = 'paid' WHERE paid = 1");
 }

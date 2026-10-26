@@ -1,13 +1,13 @@
 import { api } from '../../core/api.js';
 import { state } from '../../core/state.js';
 import { esc, rub, plural, since, between, fmtDate } from '../../core/format.js';
-import { payTag } from '../../core/domain.js';
+import { payTag, BIKE_AVAILABILITY } from '../../core/domain.js';
 import { deskShell, autoRefresh } from '../shell.js';
 
 const rentalsWord = n => `${n} ${plural(n, ['аренда', 'аренды', 'аренд'])}`;
 
 const bikeTile = b => `
-  <div class="d-bike ${b.busy ? 'busy' : ''}">
+  <div class="d-bike ${b.busy ? 'busy' : ''} ${b.availability !== 'available' ? 'off' : ''}">
     <div class="d-bike-top">
       <img src="${b.image}" alt="">
       <div class="d-bike-title"><span class="name">${esc(b.name)}</span><span class="sub">Flex ${b.rate} ₽</span></div>
@@ -15,6 +15,7 @@ const bikeTile = b => `
     <div class="tags">
       ${b.busy ? '<span class="tag tag-busy">В аренде</span>' : '<span class="tag tag-free">Свободен</span>'}
       ${b.repairs.length ? '<span class="tag tag-repair">Ремонт</span>' : ''}
+      ${b.availability !== 'available' ? `<span class="tag tag-rejected">${BIKE_AVAILABILITY[b.availability]}</span>` : ''}
     </div>
     ${b.rental ? `<div class="who"><span class="u">${esc(b.rental.userName)}</span><span class="t" data-since="${b.rental.startedAt}">${since(b.rental.startedAt)}</span></div>` : ''}
   </div>`;

@@ -11,6 +11,8 @@ export const REPAIR_PARTS = [
 export const partLabel = id => REPAIR_PARTS.find(p => p.id === id)?.label || id;
 export const partTags = parts => parts.map(p => `<span class="tag tag-repair">${partLabel(p)}</span>`).join('');
 
+export const BIKE_AVAILABILITY = { available: 'Доступен', unavailable: 'Недоступен', hidden: 'Скрыт' };
+
 export const PAY_STATUSES = { pending: 'Ждёт оплаты', paid: 'Оплачено', rejected: 'Отклонено' };
 const PAY_TAG_CLASS = { pending: 'tag-wait', paid: 'tag-free', rejected: 'tag-rejected' };
 

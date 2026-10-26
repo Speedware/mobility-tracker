@@ -1,5 +1,5 @@
 const { db, now, registrationOpen, setRegistrationOpen } = require('../db');
-const { ADMIN_EMAIL, PAY_STATUSES } = require('../config');
+const { ADMIN_EMAIL, PAY_STATUSES, BIKE_AVAILABILITY } = require('../config');
 const { HttpError, send, readJson, str, isEmail, parsePhoto } = require('../lib/http');
 const { hashPassword, isAdmin, dropSessions } = require('../lib/auth');
 const { bikeList, RENTAL_FIELDS, rentalRow } = require('../services/fleet');
@@ -17,7 +17,19 @@ module.exports = route => {
       SELECT ${RENTAL_FIELDS}, u.name AS userName
       FROM rentals r JOIN bikes b ON b.id = r.bike_id JOIN users u ON u.id = r.user_id
       ORDER BY r.started_at DESC LIMIT 5`).all().map(rentalRow);
-    send(res, 200, { bikes: bikeList(user.id), today: statsSince(today), month: statsSince(month), recent });
+    send(res, 200, { bikes: bikeList(user.id, { includeHidden: true }), today: statsSince(today), month: statsSince(month), recent });
+  }, ADMIN);
+
+  route('GET', '/api/admin/bikes', (req, res, user) => {
+    send(res, 200, { bikes: bikeList(user.id, { includeHidden: true }) });
+  }, ADMIN);
+
+  route('PATCH', /^\/api\/admin\/bikes\/(\d+)$/, async (req, res, user, [id]) => {
+    const b = await readJson(req);
+    if (!BIKE_AVAILABILITY.includes(b.availability)) throw new HttpError(400, 'Некорректный статус байка');
+    const r = db.prepare('UPDATE bikes SET availability = ? WHERE id = ?').run(b.availability, Number(id));
+    if (!r.changes) throw new HttpError(404, 'Байк не найден');
+    send(res, 200, { ok: true });
   }, ADMIN);
 
   route('GET', '/api/admin/repairs', (req, res) => {

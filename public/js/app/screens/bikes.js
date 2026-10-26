@@ -6,10 +6,12 @@ import { url } from '../../core/router.js';
 import { tabbar } from '../tabbar.js';
 
 const bikeCard = (b, activeRental) => {
-  const locked = (b.busy && !b.mine) || (activeRental && !b.mine);
+  const unavailable = b.availability !== 'available' && !b.mine;
+  const locked = unavailable || (b.busy && !b.mine) || (activeRental && !b.mine);
   const tag = b.mine
     ? `<span class="tag tag-mine" data-since="${b.rental.startedAt}" aria-label="Ваша аренда">${since(b.rental.startedAt)}</span>`
-    : b.busy ? '<span class="tag tag-busy">Занят</span>' : '';
+    : b.busy ? '<span class="tag tag-busy">Занят</span>'
+    : unavailable ? '<span class="tag tag-rejected">Недоступен</span>' : '';
   const inner = `
     <div>
       <div class="name">${esc(b.name)}</div>

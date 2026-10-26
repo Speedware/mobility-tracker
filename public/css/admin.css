@@ -113,7 +113,12 @@ body { background: #1F1F1F; }
 .pay-select option { background: var(--bg); color: var(--text); }
 .pay-select[data-status="pending"] { color: var(--wait); }
 .pay-select[data-status="paid"] { color: var(--ok); }
-.pay-select[data-status="rejected"] { color: var(--off); }
+.pay-select[data-status="rejected"],
+.pay-select[data-status="hidden"] { color: var(--off); }
+.pay-select[data-status="available"] { color: var(--ok); }
+.pay-select[data-status="unavailable"] { color: var(--wait); }
+.d-bike.off { opacity: .55; }
+.d-thumb { width: 44px; height: 44px; object-fit: contain; flex: none; }
 .pay-select:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
 
 .stepper { display: grid; grid-template-columns: 56px 1fr 56px; gap: 10px; }
