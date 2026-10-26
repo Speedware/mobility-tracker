@@ -1,7 +1,7 @@
 const { db, now } = require('../db');
 const { REPAIR_PARTS, COMMENT_MAX, HISTORY_DAYS } = require('../config');
 const { HttpError, send, readJson, str } = require('../lib/http');
-const { bikeList, activeRental, RENTAL_FIELDS, rentalRow } = require('../services/fleet');
+const { bikeList, activeRental, personalTerms, effectiveRate, RENTAL_FIELDS, rentalRow } = require('../services/fleet');
 
 module.exports = route => {
   route('GET', '/api/bikes', (req, res, user) => {
@@ -11,14 +11,15 @@ module.exports = route => {
   route('POST', '/api/rentals', async (req, res, user) => {
     const b = await readJson(req);
     const bike = db.prepare('SELECT * FROM bikes WHERE id = ?').get(Number(b.bikeId));
-    if (!bike || bike.availability === 'hidden') throw new HttpError(404, 'Байк не найден');
+    const terms = personalTerms(user.id);
+    if (!bike || bike.availability === 'hidden' || terms.get(bike.id)?.hidden) throw new HttpError(404, 'Байк не найден');
     if (bike.availability !== 'available') throw new HttpError(409, 'Байк сейчас недоступен');
     if (activeRental(user.id)) throw new HttpError(409, 'У вас уже есть активная аренда');
     if (db.prepare('SELECT 1 FROM rentals WHERE bike_id = ? AND ended_at IS NULL').get(bike.id)) {
       throw new HttpError(409, 'Этот байк уже арендован');
     }
     db.prepare('INSERT INTO rentals (user_id, bike_id, rate, started_at) VALUES (?, ?, ?, ?)')
-      .run(user.id, bike.id, bike.rate, now());
+      .run(user.id, bike.id, effectiveRate(bike, terms), now());
     send(res, 201, { activeRental: activeRental(user.id) });
   });
 

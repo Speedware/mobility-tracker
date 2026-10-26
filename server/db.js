@@ -16,6 +16,7 @@ db.exec(`
     password_hash TEXT NOT NULL,
     photo TEXT,
     blocked INTEGER NOT NULL DEFAULT 0,
+    rating INTEGER,
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ'))
   );
   CREATE TABLE IF NOT EXISTS sessions (
@@ -56,6 +57,13 @@ db.exec(`
     created_at TEXT NOT NULL,
     resolved_at TEXT
   );
+  CREATE TABLE IF NOT EXISTS courier_bikes (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    bike_id INTEGER NOT NULL REFERENCES bikes(id) ON DELETE CASCADE,
+    rate INTEGER,
+    hidden INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, bike_id)
+  );
   CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 `);
 
@@ -66,6 +74,7 @@ const addColumn = (table, column, def) => {
   return true;
 };
 addColumn('users', 'blocked', 'INTEGER NOT NULL DEFAULT 0');
+addColumn('users', 'rating', 'INTEGER');
 addColumn('rentals', 'closed_by_block', 'INTEGER NOT NULL DEFAULT 0');
 addColumn('bikes', 'availability', "TEXT NOT NULL DEFAULT 'available'");
 if (addColumn('rentals', 'pay_status', "TEXT NOT NULL DEFAULT 'pending'") && hasColumn('rentals', 'paid')) {

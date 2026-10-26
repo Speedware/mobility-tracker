@@ -1,7 +1,15 @@
 const { db } = require('../db');
 
-function bikeList(userId, { includeHidden = false } = {}) {
+function personalTerms(userId) {
+  const rows = db.prepare('SELECT bike_id, rate, hidden FROM courier_bikes WHERE user_id = ?').all(userId);
+  return new Map(rows.map(r => [r.bike_id, { rate: r.rate, hidden: !!r.hidden }]));
+}
+
+const effectiveRate = (bike, terms) => terms.get(bike.id)?.rate ?? bike.rate;
+
+function bikeList(userId, { includeHidden = false, personal = true } = {}) {
   const bikes = db.prepare('SELECT * FROM bikes ORDER BY sort, id').all();
+  const terms = personal ? personalTerms(userId) : new Map();
   const active = db.prepare(`
     SELECT r.bike_id, r.user_id, r.started_at, u.name AS user_name
     FROM rentals r JOIN users u ON u.id = r.user_id WHERE r.ended_at IS NULL`).all();
@@ -12,8 +20,9 @@ function bikeList(userId, { includeHidden = false } = {}) {
     const rental = active.find(a => a.bike_id === b.id);
     const mine = !!rental && rental.user_id === userId;
     if (b.availability === 'hidden' && !includeHidden && !mine) return null;
+    if (terms.get(b.id)?.hidden && !mine) return null;
     return {
-      id: b.id, name: b.name, speed: b.speed, battery: b.battery, rate: b.rate,
+      id: b.id, name: b.name, speed: b.speed, battery: b.battery, rate: effectiveRate(b, terms),
       image: `/assets/bikes/${b.image}`,
       availability: b.availability,
       busy: !!rental,
@@ -38,4 +47,4 @@ const RENTAL_FIELDS = `r.id, b.name AS bike, r.rate, r.started_at AS startedAt, 
   r.orders, r.total, r.pay_status AS payStatus, r.closed_by_block AS closedByBlock`;
 const rentalRow = r => ({ ...r, closedByBlock: !!r.closedByBlock });
 
-module.exports = { bikeList, activeRental, RENTAL_FIELDS, rentalRow };
+module.exports = { bikeList, activeRental, personalTerms, effectiveRate, RENTAL_FIELDS, rentalRow };

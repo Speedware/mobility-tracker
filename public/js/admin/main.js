@@ -7,6 +7,7 @@ import { deskBikes } from './screens/bikes.js';
 import { deskRepairs } from './screens/repairs.js';
 import { deskRentals } from './screens/rentals.js';
 import { deskCouriers } from './screens/couriers.js';
+import { deskCourier } from './screens/courier.js';
 import { deskSettings } from './screens/settings.js';
 
 const routes = [
@@ -16,6 +17,7 @@ const routes = [
   [/^\/repairs$/, deskRepairs],
   [/^\/rentals$/, deskRentals],
   [/^\/couriers$/, deskCouriers],
+  [/^\/couriers\/(\d+)$/, deskCourier],
   [/^\/settings$/, deskSettings],
 ];
 

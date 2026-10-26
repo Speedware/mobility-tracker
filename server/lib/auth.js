@@ -36,7 +36,7 @@ function currentUser(req) {
 }
 
 const isAdmin = u => !!u && u.email.toLowerCase() === ADMIN_EMAIL;
-const publicUser = u => ({ id: u.id, name: u.name, email: u.email, photo: u.photo, isAdmin: isAdmin(u) });
+const publicUser = u => ({ id: u.id, name: u.name, email: u.email, photo: u.photo, rating: u.rating ?? null, isAdmin: isAdmin(u) });
 
 function signIn(req, res, user, status = 200) {
   send(res, status, { user: publicUser(user) }, {

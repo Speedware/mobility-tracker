@@ -184,3 +184,40 @@ body { background: #1F1F1F; }
   .d-search { width: 100%; }
   .pay-select { font-size: 16px; padding: 4px 28px 4px 10px; }
 }
+
+.d-link { color: inherit; text-decoration: none; }
+.d-link:hover > div { color: var(--yellow); }
+.d-rating { display: inline-flex; align-items: center; gap: 3px; font-family: var(--display); font-weight: 600; color: var(--yellow); }
+.d-rating svg { width: 14px; height: 14px; }
+.d-rating.big { margin-left: 8px; font-size: 17px; }
+.d-rating.big svg { width: 16px; height: 16px; }
+
+.profile-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.profile-head .d-ava { width: 52px; height: 52px; font-size: 17px; }
+.profile-head b { display: block; font-size: 17px; font-weight: 600; }
+.profile-head small { color: var(--muted); font-size: 13px; }
+.head-actions { display: flex; gap: 10px; }
+.head-actions .btn + .btn { margin-top: 0; }
+
+.rating-card { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 16px 20px; max-width: none; }
+.rating-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.rating-pick button {
+  width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid #4A4A4A; background: transparent;
+  color: var(--text); font-family: var(--display); font-weight: 600; font-size: 15px;
+}
+.rating-pick button:hover { border-color: var(--yellow); }
+.rating-pick button[aria-pressed="true"] { background: var(--yellow); border-color: var(--yellow); color: var(--ink); }
+.link-btn { background: none; border: 0; padding: 0; color: var(--muted); font-size: 13px; text-decoration: none; }
+.link-btn:hover { color: var(--yellow); }
+
+.rate-field { display: inline-flex; align-items: center; gap: 6px; }
+.rate-field .field { width: 96px; height: 36px; padding: 0 10px; text-align: right; font-weight: 500; border-color: #4A4A4A; -moz-appearance: textfield; }
+.rate-field .field::-webkit-outer-spin-button, .rate-field .field::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.rate-field .field::placeholder { color: #8A8A8A; }
+.rate-field.custom .field { border-color: var(--yellow); color: var(--yellow); }
+.rate-field span { color: var(--muted); }
+@media (max-width: 860px) {
+  .head-actions { width: 100%; }
+}
+
+.d-row-link { cursor: pointer; }

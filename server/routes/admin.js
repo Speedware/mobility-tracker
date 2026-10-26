@@ -2,7 +2,7 @@ const { db, now, registrationOpen, setRegistrationOpen } = require('../db');
 const { ADMIN_EMAIL, PAY_STATUSES, BIKE_AVAILABILITY } = require('../config');
 const { HttpError, send, readJson, str, isEmail, parsePhoto } = require('../lib/http');
 const { hashPassword, isAdmin, dropSessions } = require('../lib/auth');
-const { bikeList, RENTAL_FIELDS, rentalRow } = require('../services/fleet');
+const { bikeList, personalTerms, RENTAL_FIELDS, rentalRow } = require('../services/fleet');
 
 const ADMIN = { admin: true };
 
@@ -17,11 +17,11 @@ module.exports = route => {
       SELECT ${RENTAL_FIELDS}, u.name AS userName
       FROM rentals r JOIN bikes b ON b.id = r.bike_id JOIN users u ON u.id = r.user_id
       ORDER BY r.started_at DESC LIMIT 5`).all().map(rentalRow);
-    send(res, 200, { bikes: bikeList(user.id, { includeHidden: true }), today: statsSince(today), month: statsSince(month), recent });
+    send(res, 200, { bikes: bikeList(user.id, { includeHidden: true, personal: false }), today: statsSince(today), month: statsSince(month), recent });
   }, ADMIN);
 
   route('GET', '/api/admin/bikes', (req, res, user) => {
-    send(res, 200, { bikes: bikeList(user.id, { includeHidden: true }) });
+    send(res, 200, { bikes: bikeList(user.id, { includeHidden: true, personal: false }) });
   }, ADMIN);
 
   route('PATCH', /^\/api\/admin\/bikes\/(\d+)$/, async (req, res, user, [id]) => {
@@ -84,7 +84,7 @@ module.exports = route => {
 
   route('GET', '/api/admin/couriers', (req, res) => {
     const rows = db.prepare(`
-      SELECT u.id, u.name, u.email, u.photo, u.blocked, u.created_at AS createdAt,
+      SELECT u.id, u.name, u.email, u.photo, u.blocked, u.rating, u.created_at AS createdAt,
         COUNT(CASE WHEN r.ended_at IS NOT NULL AND r.pay_status <> 'rejected' THEN 1 END) AS rentals,
         COALESCE(SUM(CASE WHEN r.pay_status <> 'rejected' THEN r.orders END), 0) AS orders,
         COALESCE(SUM(CASE WHEN r.pay_status <> 'rejected' THEN r.total END), 0) AS revenue,
@@ -95,6 +95,46 @@ module.exports = route => {
       WHERE lower(u.email) <> ?
       GROUP BY u.id ORDER BY u.name`).all(ADMIN_EMAIL);
     send(res, 200, { couriers: rows.map(c => ({ ...c, blocked: !!c.blocked })) });
+  }, ADMIN);
+
+  route('GET', /^\/api\/admin\/couriers\/(\d+)$/, (req, res, user, [id]) => {
+    const c = db.prepare('SELECT * FROM users WHERE id = ?').get(Number(id));
+    if (!c || isAdmin(c)) throw new HttpError(404, 'Курьер не найден');
+    const terms = personalTerms(c.id);
+    const bikes = db.prepare('SELECT * FROM bikes ORDER BY sort, id').all().map(b => ({
+      id: b.id, name: b.name, image: `/assets/bikes/${b.image}`, availability: b.availability,
+      baseRate: b.rate, rate: terms.get(b.id)?.rate ?? null, hidden: !!terms.get(b.id)?.hidden,
+    }));
+    const stats = db.prepare(`
+      SELECT COUNT(CASE WHEN ended_at IS NOT NULL AND pay_status <> 'rejected' THEN 1 END) AS rentals,
+        COALESCE(SUM(CASE WHEN pay_status <> 'rejected' THEN orders END), 0) AS orders,
+        COALESCE(SUM(CASE WHEN pay_status <> 'rejected' THEN total END), 0) AS revenue,
+        COALESCE(SUM(CASE WHEN ended_at IS NOT NULL AND pay_status = 'pending' THEN total END), 0) AS unpaid
+      FROM rentals WHERE user_id = ?`).get(c.id);
+    send(res, 200, {
+      courier: { id: c.id, name: c.name, email: c.email, photo: c.photo, blocked: !!c.blocked, rating: c.rating, createdAt: c.created_at, ...stats },
+      bikes,
+    });
+  }, ADMIN);
+
+  route('PUT', /^\/api\/admin\/couriers\/(\d+)\/bikes\/(\d+)$/, async (req, res, user, [id, bikeId]) => {
+    const b = await readJson(req);
+    const c = db.prepare('SELECT * FROM users WHERE id = ?').get(Number(id));
+    if (!c || isAdmin(c)) throw new HttpError(404, 'Курьер не найден');
+    if (!db.prepare('SELECT 1 FROM bikes WHERE id = ?').get(Number(bikeId))) throw new HttpError(404, 'Байк не найден');
+    let rate = null;
+    if (b.rate !== null && b.rate !== undefined && b.rate !== '') {
+      rate = Number(b.rate);
+      if (!Number.isInteger(rate) || rate < 1 || rate > 10000) throw new HttpError(400, 'Цена — целое число от 1 до 10 000 ₽');
+    }
+    const hidden = b.hidden ? 1 : 0;
+    if (rate === null && !hidden) {
+      db.prepare('DELETE FROM courier_bikes WHERE user_id = ? AND bike_id = ?').run(c.id, Number(bikeId));
+    } else {
+      db.prepare(`INSERT INTO courier_bikes (user_id, bike_id, rate, hidden) VALUES (?, ?, ?, ?)
+        ON CONFLICT(user_id, bike_id) DO UPDATE SET rate = excluded.rate, hidden = excluded.hidden`).run(c.id, Number(bikeId), rate, hidden);
+    }
+    send(res, 200, { ok: true });
   }, ADMIN);
 
   route('POST', '/api/admin/couriers', async (req, res) => {
@@ -119,13 +159,18 @@ module.exports = route => {
     if (!name) throw new HttpError(400, 'Укажите ФИО');
     const photo = 'photo' in b ? parsePhoto(b.photo) : c.photo;
     const blocked = 'blocked' in b ? (b.blocked ? 1 : 0) : c.blocked;
+    let rating = c.rating;
+    if ('rating' in b) {
+      rating = b.rating === null ? null : Number(b.rating);
+      if (rating !== null && (!Number.isInteger(rating) || rating < 1 || rating > 10)) throw new HttpError(400, 'Рейтинг — от 1 до 10');
+    }
     let hash = c.password_hash;
     if (b.password) {
       if (typeof b.password !== 'string' || b.password.length < 6) throw new HttpError(400, 'Пароль — минимум 6 символов');
       hash = hashPassword(b.password);
     }
-    db.prepare('UPDATE users SET name = ?, photo = ?, blocked = ?, password_hash = ? WHERE id = ?')
-      .run(name, photo, blocked, hash, c.id);
+    db.prepare('UPDATE users SET name = ?, photo = ?, blocked = ?, rating = ?, password_hash = ? WHERE id = ?')
+      .run(name, photo, blocked, rating, hash, c.id);
     if (blocked || b.password) dropSessions(c.id);
     if (blocked) {
       db.prepare(`UPDATE rentals SET ended_at = ?, orders = 0, total = 0, pay_status = 'paid', closed_by_block = 1

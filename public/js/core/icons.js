@@ -16,6 +16,7 @@ export const icons = {
   trash: svg('<path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>'),
   logout: svg('<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>'),
   camera: svg('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>', 'width="16" height="16" viewBox="0 0 24 24" stroke-width="2.2"'),
+  star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8l2.83 5.73 6.32.92-4.58 4.46 1.08 6.3L12 17.24l-5.65 2.97 1.08-6.3-4.58-4.46 6.32-.92z"/></svg>',
   check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 'viewBox="0 0 24 24" stroke-width="3"'),
   alert: svg('<path d="M12 6.5v7M12 17.5v.01"/>', 'viewBox="0 0 24 24" stroke-width="3"'),
   arrow: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#F7D049" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
