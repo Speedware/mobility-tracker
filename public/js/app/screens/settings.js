@@ -19,7 +19,7 @@ export async function screenSettings() {
             ${me.photo ? '' : esc(initialsOf(me.name))}<span class="cam">${icons.camera}</span>
           </button>
           <div class="who">
-            <b>${esc(me.name.trim().split(/\s+/).slice(0, 2).join(' '))}</b><span>${esc(me.email)}</span>
+            <b>${esc(me.name)}</b><span>${esc(me.email)}</span>
             ${me.rating ? `<div class="rating-badge" aria-label="Рейтинг ${me.rating} из 10">${me.rating}${icons.star}</div>` : ''}
           </div>
           <input type="file" id="photo" accept="image/*" hidden>

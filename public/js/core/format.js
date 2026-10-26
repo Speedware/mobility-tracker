@@ -21,4 +21,6 @@ export const fmtShort = iso => {
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${pad(d.getFullYear() % 100)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
+export const shortName = name => name.trim().split(/\s+/).slice(0, 2).join(' ');
+
 export const initialsOf = name => name.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();

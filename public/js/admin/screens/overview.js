@@ -1,22 +1,27 @@
 import { api } from '../../core/api.js';
 import { state } from '../../core/state.js';
-import { esc, rub, since, between, fmtDate } from '../../core/format.js';
+import { esc, rub, since, between, fmtDate, shortName } from '../../core/format.js';
+import { statusIcon } from '../../core/status.js';
 import { payTag, BIKE_AVAILABILITY } from '../../core/domain.js';
 import { deskShell, autoRefresh } from '../shell.js';
 
-const bikeTile = b => `
-  <div class="d-bike ${b.busy ? 'busy' : ''} ${b.availability !== 'available' ? 'off' : ''}">
+const bikeTile = b => {
+  const off = b.availability !== 'available';
+  const status = b.busy ? 'busy' : off ? 'off' : 'free';
+  return `
+  <div class="d-bike ${b.busy ? 'busy' : ''} ${off ? 'off' : ''}">
     <div class="d-bike-top">
       <img src="${b.image}" alt="">
-      <div class="d-bike-title"><span class="name">${esc(b.name)}</span><span class="sub">Flex ${b.rate} ₽</span></div>
+      <div class="d-bike-info">
+        <div class="d-status">${b.repairs.length ? statusIcon('fix') : ''}${statusIcon(status)}</div>
+        <span class="name">${esc(b.name)}</span><span class="sub">Flex ${b.rental?.rate ?? b.rate} ₽</span>
+      </div>
     </div>
-    <div class="tags">
-      ${b.busy ? '<span class="tag tag-busy">В аренде</span>' : '<span class="tag tag-free">Свободен</span>'}
-      ${b.repairs.length ? '<span class="tag tag-repair">Ремонт</span>' : ''}
-      ${b.availability !== 'available' ? `<span class="tag tag-rejected">${BIKE_AVAILABILITY[b.availability]}</span>` : ''}
-    </div>
-    ${b.rental ? `<div class="who"><span class="u">${esc(b.rental.userName)}</span><span class="t" data-since="${b.rental.startedAt}">${since(b.rental.startedAt)}</span></div>` : ''}
+    <div class="who ${b.rental ? '' : 'idle'}">${b.rental
+      ? `<span class="u">${esc(shortName(b.rental.userName))}</span><span class="t" data-since="${b.rental.startedAt}">${since(b.rental.startedAt)}</span>`
+      : (off ? BIKE_AVAILABILITY[b.availability] : 'Свободен')}</div>
   </div>`;
+};
 
 const recentRow = r => `<tr>
   <td>${esc(r.userName)}<small>${fmtDate(r.startedAt)}</small></td>

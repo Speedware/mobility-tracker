@@ -1,6 +1,6 @@
 import { $app, toast } from '../../core/ui.js';
 import { api } from '../../core/api.js';
-import { esc, rub } from '../../core/format.js';
+import { esc, rub, shortName } from '../../core/format.js';
 import { icons } from '../../core/icons.js';
 import { BIKE_AVAILABILITY } from '../../core/domain.js';
 import { render, url } from '../../core/router.js';
@@ -33,7 +33,7 @@ export async function deskCourier(id) {
 
   deskShell('/couriers', 'Профиль курьера', `
     <div class="profile-head">
-      <div class="d-person">${avatarHtml(c)}<div><b>${esc(c.name)}</b><small>${esc(c.email)} · в системе с ${new Date(c.createdAt).toLocaleDateString('ru-RU')}</small></div></div>
+      <div class="d-person">${avatarHtml(c)}<div><b>${esc(shortName(c.name))}</b><small>${esc(c.email)} · в системе с ${new Date(c.createdAt).toLocaleDateString('ru-RU')}</small></div></div>
       ${c.blocked ? '<span class="tag tag-repair">Заблокирован</span>' : ''}
     </div>
     <div class="kpis">

@@ -11,7 +11,7 @@ function bikeList(userId, { includeHidden = false, personal = true } = {}) {
   const bikes = db.prepare('SELECT * FROM bikes ORDER BY sort, id').all();
   const terms = personal ? personalTerms(userId) : new Map();
   const active = db.prepare(`
-    SELECT r.bike_id, r.user_id, r.started_at, u.name AS user_name, u.photo AS user_photo
+    SELECT r.bike_id, r.user_id, r.rate, r.started_at, u.name AS user_name, u.photo AS user_photo
     FROM rentals r JOIN users u ON u.id = r.user_id WHERE r.ended_at IS NULL`).all();
   const repairs = db.prepare(`
     SELECT r.*, u.name AS user_name FROM repairs r JOIN users u ON u.id = r.user_id
@@ -27,7 +27,7 @@ function bikeList(userId, { includeHidden = false, personal = true } = {}) {
       availability: b.availability,
       busy: !!rental,
       mine,
-      rental: rental ? { userName: rental.user_name, userPhoto: rental.user_photo, startedAt: rental.started_at } : null,
+      rental: rental ? { userName: rental.user_name, userPhoto: rental.user_photo, rate: rental.rate, startedAt: rental.started_at } : null,
       repairs: repairs.filter(r => r.bike_id === b.id).map(r => ({
         id: r.id, parts: JSON.parse(r.parts), comment: r.comment,
         createdAt: r.created_at, userName: r.user_name,

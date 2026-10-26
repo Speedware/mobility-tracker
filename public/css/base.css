@@ -187,3 +187,13 @@ textarea.field { height: clamp(64px, 11dvh, 96px); padding: 12px 14px; resize: n
   #toast { transition: opacity .2s; }
   .loader .bp { animation: bolt-pulse 1.4s ease-in-out infinite; }
 }
+
+.st { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; flex: none; }
+.st svg { width: 22px; height: 22px; display: block; }
+.st-busy svg { width: 24px; height: 24px; }
+.st-fix svg { width: 20px; height: 20px; }
+.rent-timer { margin-top: 4px; font-family: var(--display); font-weight: 600; font-size: 20px; line-height: 26px; color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: .5px; }
+.st-free { color: var(--ok); }
+.st-busy { color: var(--yellow); }
+.st-off { color: #8E8E8E; }
+.st-fix { color: var(--danger); }
