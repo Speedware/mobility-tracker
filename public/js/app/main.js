@@ -45,6 +45,10 @@ if (standalone) {
   addEventListener('resize', syncAppHeight);
 }
 
+const blockZoom = e => e.preventDefault();
+['gesturestart', 'gesturechange', 'gestureend'].forEach(type => document.addEventListener(type, blockZoom, { passive: false }));
+document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+
 showSplash();
 await Promise.all([loadSession(), fontsReady()]);
 if (state.activeRental && ['/', '/bikes'].includes(currentPath())) {
