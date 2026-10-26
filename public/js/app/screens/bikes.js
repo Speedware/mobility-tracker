@@ -1,7 +1,7 @@
-import { $app } from '../../core/ui.js';
+import { $app, openModal, onTap } from '../../core/ui.js';
 import { api } from '../../core/api.js';
 import { state } from '../../core/state.js';
-import { esc, since } from '../../core/format.js';
+import { esc, since, initialsOf } from '../../core/format.js';
 import { url } from '../../core/router.js';
 import { tabbar } from '../tabbar.js';
 
@@ -35,6 +35,7 @@ const bikeCard = (b, activeRental) => {
       <div class="status">${b.repairs.length ? statusIcon('fix') : ''}${statusIcon(status)}</div>
       <div class="rate">Flex ${b.rate} ₽</div>
     </div>`;
+  if (b.busy && !b.mine) return `<button class="bike-card busy-other" data-busy="${b.id}">${inner}</button>`;
   return locked
     ? `<button class="bike-card" disabled>${inner}</button>`
     : `<a class="bike-card" href="${url(`/bike/${b.id}`)}">${inner}</a>`;
@@ -51,4 +52,22 @@ export async function screenBikes() {
       </div>
       ${tabbar('/bikes')}
     </section>`;
+
+  $app.querySelectorAll('[data-busy]').forEach(el => {
+    onTap(el, () => showBusy(bikes.find(b => b.id === Number(el.dataset.busy))));
+  });
+}
+
+const shortName = name => name.trim().split(/\s+/).slice(0, 2).join(' ');
+
+function showBusy(bike) {
+  const { userName, userPhoto } = bike.rental;
+  const { card, close } = openModal(`
+    <div class="modal-card confirm-card busy-card" role="alertdialog" aria-modal="true">
+      <span class="avatar busy-ava" style="${userPhoto ? `background-image:url('${userPhoto}')` : ''}">${userPhoto ? '' : esc(initialsOf(userName))}</span>
+      <h2>${esc(bike.name)} используется</h2>
+      <p class="modal-lead">Байк сейчас у курьера ${esc(shortName(userName))}</p>
+      <div class="modal-actions"><button class="btn btn-primary" type="button" data-ok>ОК</button></div>
+    </div>`);
+  onTap(card.querySelector('[data-ok]'), close);
 }

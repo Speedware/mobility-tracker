@@ -238,3 +238,6 @@ body { background: #1C1C1C; }
   .bike-card .rate { font-size: 16px; }
   .bike-card .status { gap: 2px; }
 }
+
+.bike-card.busy-other { opacity: .45; }
+.busy-card .busy-ava { margin: 0 auto 14px; width: 72px; height: 72px; font-size: 24px; }
