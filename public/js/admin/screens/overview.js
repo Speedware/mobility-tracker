@@ -40,8 +40,8 @@ export async function deskOverview() {
 
   deskShell('/', 'Обзор', `
     <div class="kpis">
-      <div class="kpi"><span>Сейчас в аренде</span><b>${busy}</b></div>
-      <div class="kpi ${state.openRepairs ? 'alert' : ''}"><span>Заявки на ремонт</span><b>${state.openRepairs}</b></div>
+      <div class="kpi"><span>Сейчас работают</span><b>${busy}</b></div>
+      <div class="kpi ${state.openRepairs ? 'alert' : ''}"><span>Заявки на обслуживание</span><b>${state.openRepairs}</b></div>
       <div class="kpi"><span>Выручка сегодня</span><b>${rub(data.today.revenue)}</b></div>
       <div class="kpi"><span>Выручка за месяц</span><b>${rub(data.month.revenue)}</b></div>
     </div>

@@ -1,11 +1,11 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { PUBLIC_DIR } = require('../config');
+const { PUBLIC_DIR, UPLOADS_DIR } = require('../config');
 const { send } = require('./http');
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
+  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.webmanifest': 'application/manifest+json',
 };
 
 const ENTRIES = [
@@ -35,8 +35,10 @@ function serveStatic(req, res, pathname) {
     return res.end(renderEntry(path.join(PUBLIC_DIR, entry.file)));
   }
 
-  const file = path.normalize(path.join(PUBLIC_DIR, decodeURIComponent(pathname)));
-  if (!file.startsWith(PUBLIC_DIR + path.sep)) return send(res, 403, { error: 'Forbidden' });
+  const uploads = pathname.startsWith('/uploads/');
+  const root = uploads ? UPLOADS_DIR : PUBLIC_DIR;
+  const file = path.normalize(path.join(root, decodeURIComponent(uploads ? pathname.slice('/uploads'.length) : pathname)));
+  if (!file.startsWith(root + path.sep)) return send(res, 403, { error: 'Forbidden' });
   const stat = fs.existsSync(file) && fs.statSync(file);
   if (!stat || !stat.isFile()) return send(res, 404, { error: 'Не найдено' });
 

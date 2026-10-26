@@ -14,7 +14,7 @@ export async function screenRequests(id) {
   $app.innerHTML = `
     <section class="screen requests">
       <div class="top"><h1>Заявки</h1></div>
-      <p class="requests-lead">${esc(bike.name)} уже ждёт ремонта. Если поломка та же — новую заявку создавать не нужно.</p>
+      <p class="requests-lead">${esc(bike.name)} уже ждёт обслуживания. Если поломка та же — новую заявку создавать не нужно.</p>
       <div class="requests-list">
         ${bike.repairs.map(r => `
           <div class="request">
@@ -67,7 +67,7 @@ export async function screenRepair(id) {
     if (!selected.size) throw new Error('Выберите, что сломалось');
     if (!data.comment.trim()) throw new Error('Опишите поломку в комментарии');
     await api('POST', '/api/repairs', { bikeId: bike.id, parts: [...selected], comment: data.comment });
-    toast('Заявка на ремонт отправлена');
+    toast('Заявка на обслуживание отправлена');
     go(`/bike/${bike.id}`, { replace: true });
   });
 }

@@ -225,3 +225,22 @@ body { background: #1F1F1F; }
 .d-bike-top { flex: 1; }
 .d-bike-info { justify-content: center; }
 .d-bike .who.idle { justify-content: center; color: var(--muted); }
+
+.state-text { font-weight: 600; font-size: 13px; }
+.st-free { color: var(--ok); }
+.st-busy { color: var(--yellow); }
+.st-off { color: var(--off); }
+.st-fix { color: var(--danger); }
+.d-table .rate-field.custom .field { color: var(--text); border-color: #4A4A4A; }
+.d-table .rate-field .field:focus { border-color: var(--yellow); }
+
+.bike-photo {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 170px; margin-bottom: 16px;
+  border: 1.5px dashed #4A4A4A; border-radius: 14px; background: #262626 center/contain no-repeat; color: var(--muted);
+}
+.bike-photo:hover { border-color: var(--yellow); color: var(--yellow); }
+.bike-photo [data-placeholder] { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; }
+.bike-photo [data-placeholder] svg { width: 28px; height: 28px; }
+.bike-photo.has-photo { border-style: solid; }
+.bike-photo.has-photo [data-placeholder] { display: none; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

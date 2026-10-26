@@ -1,8 +1,11 @@
 const { db, now, registrationOpen, setRegistrationOpen } = require('../db');
-const { ADMIN_EMAIL, PAY_STATUSES, BIKE_AVAILABILITY } = require('../config');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { ADMIN_EMAIL, PAY_STATUSES, BIKE_AVAILABILITY, UPLOADS_DIR, BIKE_PHOTO_MAX } = require('../config');
 const { HttpError, send, readJson, str, isEmail, parsePhoto } = require('../lib/http');
 const { hashPassword, isAdmin, dropSessions } = require('../lib/auth');
-const { bikeList, personalTerms, RENTAL_FIELDS, rentalRow } = require('../services/fleet');
+const { bikeImage, bikeList, personalTerms, RENTAL_FIELDS, rentalRow } = require('../services/fleet');
 
 const ADMIN = { admin: true };
 
@@ -25,11 +28,48 @@ module.exports = route => {
     send(res, 200, { bikes: bikeList(user.id, { includeHidden: true, personal: false }) });
   }, ADMIN);
 
+  const parseRate = v => {
+    const rate = Number(v);
+    if (!Number.isInteger(rate) || rate < 1 || rate > 10000) throw new HttpError(400, 'Тариф — целое число от 1 до 10 000 ₽');
+    return rate;
+  };
+
+  function saveBikePhoto(dataUrl) {
+    const m = typeof dataUrl === 'string' && /^data:image\/(png|jpeg|webp);base64,(.+)$/.exec(dataUrl);
+    if (!m) throw new HttpError(400, 'Добавьте фото байка');
+    const buf = Buffer.from(m[2], 'base64');
+    if (buf.length > BIKE_PHOTO_MAX) throw new HttpError(413, 'Фото слишком большое');
+    const dir = path.join(UPLOADS_DIR, 'bikes');
+    fs.mkdirSync(dir, { recursive: true });
+    const name = `${crypto.randomBytes(8).toString('hex')}.${m[1] === 'jpeg' ? 'jpg' : m[1]}`;
+    fs.writeFileSync(path.join(dir, name), buf);
+    return `/uploads/bikes/${name}`;
+  }
+
+  route('POST', '/api/admin/bikes', async (req, res) => {
+    const b = await readJson(req);
+    const name = str(b.name, 40);
+    if (!name) throw new HttpError(400, 'Укажите название');
+    if (db.prepare('SELECT 1 FROM bikes WHERE name = ? COLLATE NOCASE').get(name)) throw new HttpError(409, 'Байк с таким названием уже есть');
+    const rate = parseRate(b.rate);
+    const speed = b.speed === '' || b.speed == null ? 0 : Number(b.speed);
+    if (!Number.isInteger(speed) || speed < 0 || speed > 200) throw new HttpError(400, 'Скорость — целое число до 200');
+    const battery = str(b.battery, 20);
+    const image = saveBikePhoto(b.photo);
+    const sort = db.prepare('SELECT COALESCE(MAX(sort), -1) + 1 AS n FROM bikes').get().n;
+    db.prepare('INSERT INTO bikes (name, speed, battery, rate, image, sort) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(name, speed, battery, rate, image, sort);
+    send(res, 201, { ok: true });
+  }, ADMIN);
+
   route('PATCH', /^\/api\/admin\/bikes\/(\d+)$/, async (req, res, user, [id]) => {
     const b = await readJson(req);
-    if (!BIKE_AVAILABILITY.includes(b.availability)) throw new HttpError(400, 'Некорректный статус байка');
-    const r = db.prepare('UPDATE bikes SET availability = ? WHERE id = ?').run(b.availability, Number(id));
-    if (!r.changes) throw new HttpError(404, 'Байк не найден');
+    const bike = db.prepare('SELECT * FROM bikes WHERE id = ?').get(Number(id));
+    if (!bike) throw new HttpError(404, 'Байк не найден');
+    const availability = 'availability' in b ? b.availability : bike.availability;
+    if (!BIKE_AVAILABILITY.includes(availability)) throw new HttpError(400, 'Некорректный статус байка');
+    const rate = 'rate' in b ? parseRate(b.rate) : bike.rate;
+    db.prepare('UPDATE bikes SET availability = ?, rate = ? WHERE id = ?').run(availability, rate, bike.id);
     send(res, 200, { ok: true });
   }, ADMIN);
 
@@ -103,7 +143,7 @@ module.exports = route => {
     if (!c || isAdmin(c)) throw new HttpError(404, 'Курьер не найден');
     const terms = personalTerms(c.id);
     const bikes = db.prepare('SELECT * FROM bikes ORDER BY sort, id').all().map(b => ({
-      id: b.id, name: b.name, image: `/assets/bikes/${b.image}`, availability: b.availability,
+      id: b.id, name: b.name, image: bikeImage(b.image), availability: b.availability,
       baseRate: b.rate, rate: terms.get(b.id)?.rate ?? null, hidden: !!terms.get(b.id)?.hidden,
     }));
     const stats = db.prepare(`

@@ -13,6 +13,9 @@ export const partTags = parts => parts.map(p => `<span class="tag tag-repair">${
 
 export const BIKE_AVAILABILITY = { available: 'Доступен', unavailable: 'Недоступен', hidden: 'Скрыт' };
 
+export const bikeState = b => (b.busy ? 'busy' : b.availability !== 'available' ? 'off' : 'free');
+export const STATE_LABEL = { free: 'Свободен', busy: 'Работает', off: 'Недоступен' };
+
 export const PAY_STATUSES = { pending: 'Ждёт оплаты', paid: 'Оплачено', rejected: 'Отклонено' };
 const PAY_TAG_CLASS = { pending: 'tag-wait', paid: 'tag-free', rejected: 'tag-rejected' };
 

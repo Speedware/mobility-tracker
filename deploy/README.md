@@ -110,6 +110,7 @@ sudo crontab -e
 ```bash
 sudo systemctl stop mobility
 gunzip -c /var/backups/mobility/<файл>.db.gz | sudo -u mobility tee /opt/mobility-tracker/data/mobility.db > /dev/null
+sudo -u mobility tar -xzf /var/backups/mobility/<файл>-uploads.tar.gz -C /opt/mobility-tracker/data
 sudo rm -f /opt/mobility-tracker/data/mobility.db-wal /opt/mobility-tracker/data/mobility.db-shm
 sudo systemctl start mobility
 ```

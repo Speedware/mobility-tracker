@@ -15,8 +15,8 @@ const bikeCard = (b, activeRental) => {
       <div class="name">${esc(b.name)}</div>
       ${b.mine
         ? `<div class="rent-timer" data-since="${b.rental.startedAt}" aria-label="Время аренды">${since(b.rental.startedAt)}</div>`
-        : `<div class="spec">Скорость до ${b.speed} km/h</div>
-      <div class="spec-2">Батарея ${esc(b.battery)}</div>`}
+        : `<div class="spec">${b.speed ? `Скорость до ${b.speed} km/h` : '&nbsp;'}</div>
+      <div class="spec-2">${b.battery ? `Батарея ${esc(b.battery)}` : '&nbsp;'}</div>`}
     </div>
     <div class="side">
       <div class="status">${b.repairs.length ? statusIcon('fix') : ''}${statusIcon(status)}</div>

@@ -1,5 +1,7 @@
 const { db } = require('../db');
 
+const bikeImage = image => (image.startsWith('/') ? image : `/assets/bikes/${image}`);
+
 function personalTerms(userId) {
   const rows = db.prepare('SELECT bike_id, rate, hidden FROM courier_bikes WHERE user_id = ?').all(userId);
   return new Map(rows.map(r => [r.bike_id, { rate: r.rate, hidden: !!r.hidden }]));
@@ -23,7 +25,7 @@ function bikeList(userId, { includeHidden = false, personal = true } = {}) {
     if (terms.get(b.id)?.hidden && !mine) return null;
     return {
       id: b.id, name: b.name, speed: b.speed, battery: b.battery, rate: effectiveRate(b, terms),
-      image: `/assets/bikes/${b.image}`,
+      image: bikeImage(b.image),
       availability: b.availability,
       busy: !!rental,
       mine,
@@ -47,4 +49,4 @@ const RENTAL_FIELDS = `r.id, b.name AS bike, r.rate, r.started_at AS startedAt, 
   r.orders, r.total, r.pay_status AS payStatus, r.closed_by_block AS closedByBlock`;
 const rentalRow = r => ({ ...r, closedByBlock: !!r.closedByBlock });
 
-module.exports = { bikeList, activeRental, personalTerms, effectiveRate, RENTAL_FIELDS, rentalRow };
+module.exports = { bikeImage, bikeList, activeRental, personalTerms, effectiveRate, RENTAL_FIELDS, rentalRow };

@@ -8,6 +8,7 @@ module.exports = {
   ROOT,
   PUBLIC_DIR: path.join(ROOT, 'public'),
   DATA_DIR: path.join(ROOT, 'data'),
+  UPLOADS_DIR: path.join(ROOT, 'data', 'uploads'),
 
   ADMIN_EMAIL: (process.env.ADMIN_EMAIL || 'antonraseperin@gmail.com').toLowerCase(),
 
@@ -18,5 +19,6 @@ module.exports = {
   PAY_STATUSES: ['pending', 'paid', 'rejected'],
   BIKE_AVAILABILITY: ['available', 'unavailable', 'hidden'],
   PHOTO_MAX: 2 * 1024 * 1024,
-  BODY_MAX: 3 * 1024 * 1024,
+  BIKE_PHOTO_MAX: 5 * 1024 * 1024,
+  BODY_MAX: 6 * 1024 * 1024,
 };

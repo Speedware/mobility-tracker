@@ -19,7 +19,7 @@ export async function screenBike(id) {
     return go('/bikes', { replace: true });
   }
   if (bike.busy && !bike.mine) {
-    toast('Этот байк сейчас в аренде', true);
+    toast('Этот байк сейчас работает у другого курьера', true);
     return go('/bikes', { replace: true });
   }
 
@@ -41,7 +41,7 @@ export async function screenBike(id) {
         </div>
         <div class="timer" ${renting ? `data-since="${activeRental.startedAt}"` : ''}>${renting ? since(activeRental.startedAt) : '00:00:00'}</div>
         <a class="btn btn-outline" href="${SUPPORT_TEL}">Позвонить в поддержку</a>
-        <a class="btn btn-outline" href="${url(repairPath)}">Запросить ремонт</a>
+        <a class="btn btn-outline" href="${url(repairPath)}">Запросить обслуживание</a>
       </div>
       ${tabbar('/bikes')}
     </section>`;

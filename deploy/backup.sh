@@ -18,5 +18,8 @@ db.close();
 ' "$APP_DIR/data/mobility.db" "$target"
 
 gzip "$target"
-find "$BACKUP_DIR" -name 'mobility-*.db.gz' -mtime +"$KEEP_DAYS" -delete
+if [ -d "$APP_DIR/data/uploads" ]; then
+  tar -czf "${target%.db}-uploads.tar.gz" -C "$APP_DIR/data" uploads
+fi
+find "$BACKUP_DIR" -name 'mobility-*' -mtime +"$KEEP_DAYS" -delete
 echo "Backup: $target.gz"

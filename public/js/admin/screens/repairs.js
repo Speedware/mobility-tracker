@@ -17,7 +17,7 @@ const row = r => `<tr>
   <td>${esc(r.userName)}</td>
   <td class="nowrap">${r.resolvedAt
     ? `<span class="tag tag-free">Закрыта</span><small>${fmtDate(r.resolvedAt)}</small>`
-    : `<button class="btn btn-outline d-small" data-resolve="${r.id}">Отремонтировано</button>`}</td>
+    : `<button class="btn btn-outline d-small" data-resolve="${r.id}">Обслужено</button>`}</td>
   <td class="num"><button class="desk-icon-btn d-del" data-del="${r.id}" title="Удалить заявку" aria-label="Удалить заявку">${icons.trash}</button></td>
 </tr>`;
 
@@ -26,7 +26,7 @@ export async function deskRepairs() {
   state.openRepairs = repairs.filter(r => !r.resolvedAt).length;
   const list = filter === 'open' ? repairs.filter(r => !r.resolvedAt) : repairs;
 
-  deskShell('/repairs', 'Заявки на ремонт', `
+  deskShell('/repairs', 'Заявки на обслуживание', `
     <div class="d-card">
       ${list.length ? `<table class="d-table">
         <thead><tr><th>Дата</th><th>Байк</th><th>Что сломалось</th><th>Комментарий</th><th>Курьер</th><th>Статус</th><th></th></tr></thead>
