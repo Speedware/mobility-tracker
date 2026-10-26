@@ -8,7 +8,7 @@ import { url, currentPath, onLeave } from '../core/router.js';
 const NAV = [
   { path: '/', label: 'Обзор', icon: icons.panel },
   { path: '/bikes', label: 'Байки', icon: icons.bike },
-  { path: '/repairs', label: 'Ремонт', icon: icons.wrench, badge: () => state.openRepairs },
+  { path: '/repairs', label: 'Ремонт', icon: icons.wrench },
   { path: '/rentals', label: 'Аренды', icon: icons.history },
   { path: '/couriers', label: 'Курьеры', icon: icons.users },
   { path: '/settings', label: 'Настройки', icon: icons.settings },
