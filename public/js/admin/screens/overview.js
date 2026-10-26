@@ -1,10 +1,8 @@
 import { api } from '../../core/api.js';
 import { state } from '../../core/state.js';
-import { esc, rub, plural, since, between, fmtDate } from '../../core/format.js';
+import { esc, rub, since, between, fmtDate } from '../../core/format.js';
 import { payTag, BIKE_AVAILABILITY } from '../../core/domain.js';
 import { deskShell, autoRefresh } from '../shell.js';
-
-const rentalsWord = n => `${n} ${plural(n, ['аренда', 'аренды', 'аренд'])}`;
 
 const bikeTile = b => `
   <div class="d-bike ${b.busy ? 'busy' : ''} ${b.availability !== 'available' ? 'off' : ''}">
@@ -38,8 +36,8 @@ export async function deskOverview() {
     <div class="kpis">
       <div class="kpi"><span>Сейчас в аренде</span><b>${busy}</b></div>
       <div class="kpi ${state.openRepairs ? 'alert' : ''}"><span>Заявки на ремонт</span><b>${state.openRepairs}</b></div>
-      <div class="kpi"><span>Выручка сегодня</span><b>${rub(data.today.revenue)}</b><small>${data.today.orders} зак. · ${rentalsWord(data.today.rentals)}</small></div>
-      <div class="kpi"><span>Выручка за месяц</span><b>${rub(data.month.revenue)}</b><small>${data.month.orders} зак. · ${rentalsWord(data.month.rentals)}</small></div>
+      <div class="kpi"><span>Выручка сегодня</span><b>${rub(data.today.revenue)}</b></div>
+      <div class="kpi"><span>Выручка за месяц</span><b>${rub(data.month.revenue)}</b></div>
     </div>
     <div class="desk-cols">
       <section>
