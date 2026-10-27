@@ -226,11 +226,9 @@ body { background: #1F1F1F; }
 .d-bike-info { justify-content: center; }
 .d-bike .who.idle { justify-content: center; color: var(--muted); }
 
-.state-text { font-weight: 600; font-size: 13px; }
-.st-free { color: var(--ok); }
-.st-busy { color: var(--yellow); }
-.st-off { color: var(--off); }
-.st-fix { color: var(--danger); }
+.tag-busy.tag, .tag.tag-busy { color: var(--yellow); background: rgba(247, 208, 73, .14); }
+.tag-off { color: var(--off); background: rgba(142, 142, 142, .18); }
+.tag-fix { color: var(--danger); background: rgba(255, 107, 91, .16); }
 .d-table .rate-field.custom .field { color: var(--text); border-color: #4A4A4A; }
 .d-table .rate-field .field:focus { border-color: var(--yellow); }
 

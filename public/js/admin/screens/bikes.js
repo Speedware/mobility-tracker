@@ -8,8 +8,8 @@ import { deskShell } from '../shell.js';
 
 const stateCell = b => {
   const st = bikeState(b);
-  return `<div class="state-text">
-      <span class="st-${st}">${STATE_LABEL[st]}</span>${b.repairs.length ? ' <span class="st-fix">+ Обслуживание</span>' : ''}
+  return `<div class="parts">
+      <span class="tag tag-${st}">${STATE_LABEL[st]}</span>${b.repairs.length ? '<span class="tag tag-fix">Обслуживание</span>' : ''}
     </div>${b.rental
     ? `<small>${esc(shortName(b.rental.userName))} · <span data-since="${b.rental.startedAt}">${since(b.rental.startedAt)}</span></small>` : ''}`;
 };
