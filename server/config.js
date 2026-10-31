@@ -15,6 +15,7 @@ module.exports = {
   SESSION_DAYS: 30,
   HISTORY_DAYS: 30,
   WEEK_PLAN_TARGET: Number(process.env.WEEK_PLAN_TARGET) || 15000,
+  PLATFORM_FEE_RATE: 0.04,
   REPAIR_PARTS: ['brakes', 'lights', 'battery', 'throttle', 'mirrors', 'other'],
   COMMENT_MAX: 300,
   PAY_STATUSES: ['pending', 'paid', 'rejected'],

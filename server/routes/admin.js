@@ -2,7 +2,7 @@ const { db, now, registrationOpen, setRegistrationOpen } = require('../db');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { ADMIN_EMAIL, PAY_STATUSES, BIKE_AVAILABILITY, UPLOADS_DIR, BIKE_PHOTO_MAX, WEEK_PLAN_TARGET } = require('../config');
+const { ADMIN_EMAIL, PAY_STATUSES, BIKE_AVAILABILITY, UPLOADS_DIR, BIKE_PHOTO_MAX, WEEK_PLAN_TARGET, PLATFORM_FEE_RATE } = require('../config');
 const { HttpError, send, readJson, str, isEmail, parsePhoto } = require('../lib/http');
 const { hashPassword, isAdmin, dropSessions } = require('../lib/auth');
 const { bikeImage, bikeList, personalTerms, RENTAL_FIELDS, rentalRow } = require('../services/fleet');
@@ -66,7 +66,7 @@ module.exports = route => {
       ? fleet.reduce((s, b) => s + (usedDays[b.id]?.size || 0) / elapsed * 100, 0) / fleet.length
       : 0;
 
-    const expenses = 0;
+    const expenses = Math.round(revenue * PLATFORM_FEE_RATE);
     send(res, 200, {
       from: start.toISOString(),
       to: new Date(end.getTime() - 1).toISOString(),
