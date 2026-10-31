@@ -2,7 +2,7 @@ const { db, now, registrationOpen, setRegistrationOpen } = require('../db');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { ADMIN_EMAIL, PAY_STATUSES, BIKE_AVAILABILITY, UPLOADS_DIR, BIKE_PHOTO_MAX } = require('../config');
+const { ADMIN_EMAIL, PAY_STATUSES, BIKE_AVAILABILITY, UPLOADS_DIR, BIKE_PHOTO_MAX, WEEK_PLAN_TARGET } = require('../config');
 const { HttpError, send, readJson, str, isEmail, parsePhoto } = require('../lib/http');
 const { hashPassword, isAdmin, dropSessions } = require('../lib/auth');
 const { bikeImage, bikeList, personalTerms, RENTAL_FIELDS, rentalRow } = require('../services/fleet');
@@ -22,6 +22,61 @@ module.exports = route => {
       WHERE r.ended_at IS NOT NULL
       ORDER BY r.ended_at DESC LIMIT 5`).all().map(rentalRow);
     send(res, 200, { bikes: bikeList(user.id, { includeHidden: true, personal: false }), today: statsSince(today), month: statsSince(month), recent });
+  }, ADMIN);
+
+  route('GET', '/api/admin/dashboard', (req, res) => {
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // понедельник текущей недели
+    const end = new Date(start); end.setDate(end.getDate() + 7);
+    const dayIndex = iso => Math.floor((new Date(iso).setHours(0, 0, 0, 0) - start.getTime()) / 86400000 + 0.5);
+
+    const rows = db.prepare(`
+      SELECT r.user_id AS userId, u.name AS userName, r.bike_id AS bikeId, b.name AS bike,
+             r.started_at AS startedAt, r.ended_at AS endedAt, COALESCE(r.total, 0) AS total
+      FROM rentals r JOIN bikes b ON b.id = r.bike_id JOIN users u ON u.id = r.user_id
+      WHERE r.ended_at IS NOT NULL AND r.pay_status <> 'rejected' AND r.ended_at >= ? AND r.ended_at < ?`)
+      .all(start.toISOString(), end.toISOString());
+
+    const days = Array(7).fill(0);
+    const byCourier = new Map(db.prepare('SELECT id, name FROM users WHERE blocked = 0 AND lower(email) <> ?')
+      .all(ADMIN_EMAIL).map(c => [c.id, { name: c.name, revenue: 0 }]));
+    const byBike = {};
+    const usedDays = {};
+    let revenue = 0;
+    for (const r of rows) {
+      revenue += r.total;
+      const i = dayIndex(r.endedAt);
+      if (i >= 0 && i < 7) days[i] += r.total;
+      const c = byCourier.get(r.userId) || { name: r.userName, revenue: 0 };
+      c.revenue += r.total;
+      byCourier.set(r.userId, c);
+      byBike[r.bike] = (byBike[r.bike] || 0) + r.total;
+    }
+    for (const r of db.prepare(`SELECT bike_id AS bikeId, started_at AS startedAt, ended_at AS endedAt FROM rentals
+      WHERE started_at < ? AND (ended_at IS NULL OR ended_at >= ?)`).all(end.toISOString(), start.toISOString())) {
+      const set = usedDays[r.bikeId] ||= new Set();
+      const from = Math.max(0, dayIndex(r.startedAt));
+      const to = Math.min(6, r.endedAt ? dayIndex(r.endedAt) : dayIndex(now()));
+      for (let i = from; i <= to; i++) set.add(i);
+    }
+
+    const elapsed = Math.min(7, dayIndex(now()) + 1);
+    const fleet = db.prepare("SELECT id FROM bikes WHERE availability <> 'hidden'").all();
+    const load = fleet.length
+      ? fleet.reduce((s, b) => s + (usedDays[b.id]?.size || 0) / elapsed * 100, 0) / fleet.length
+      : 0;
+
+    const expenses = 0;
+    send(res, 200, {
+      from: start.toISOString(),
+      to: new Date(end.getTime() - 1).toISOString(),
+      revenue, expenses, profit: revenue - expenses,
+      planTarget: WEEK_PLAN_TARGET,
+      load,
+      days,
+      couriers: [...byCourier.values()].sort((a, b) => b.revenue - a.revenue),
+      bikes: Object.entries(byBike).map(([name, value]) => ({ name, revenue: value })).sort((a, b) => b.revenue - a.revenue),
+    });
   }, ADMIN);
 
   route('GET', '/api/admin/bikes', (req, res, user) => {

@@ -242,3 +242,43 @@ body { background: #1F1F1F; }
 .bike-photo.has-photo { border-style: solid; }
 .bike-photo.has-photo [data-placeholder] { display: none; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Дашборд */
+.db-head { align-items: center; }
+.db-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+.db-kpi-label { display: flex !important; align-items: center; gap: 8px; }
+.db-kpi-label svg { width: 20px; height: 20px; color: var(--yellow); flex: none; }
+.db-kpi b { font-size: 24px; }
+.db-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 14px; }
+.db-card { grid-column: span 3; display: flex; flex-direction: column; min-height: 360px; background: var(--bg); border: 1px solid #383838; border-radius: 16px; padding: 20px 22px; }
+.db-card.db-wide { grid-column: span 4; }
+.db-title { margin: 0 0 20px; font-size: 15px; font-weight: 600; }
+.db-bars { flex: 1; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; min-height: 200px; }
+.db-bar-col { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.db-bar { width: 100%; max-width: 44px; background: var(--yellow); border-radius: 10px 10px 4px 4px; transition: height .4s ease; }
+.db-bar-value { font-size: 11px; color: var(--muted); margin-bottom: 6px; white-space: nowrap; }
+.db-bar-label { margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.db-rank { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+.db-rank li { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #383838; font-size: 14px; color: var(--muted); }
+.db-rank li:last-child { border-bottom: 0; padding-bottom: 0; }
+.db-rank li b { display: inline-block; min-width: 1.6em; color: var(--yellow); }
+.db-rank li em { font-style: normal; font-weight: 700; color: var(--yellow); white-space: nowrap; }
+.db-rank li em.zero { color: var(--muted); font-weight: 500; }
+.db-rank li.top { font-size: 17px; font-weight: 700; color: var(--text); }
+.db-donut-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
+.db-donut-circle { position: relative; width: min(196px, 60%); aspect-ratio: 1; flex: none; }
+.db-donut { width: 100%; height: 100%; border-radius: 50%; }
+.db-donut::after { content: ''; position: absolute; inset: 24%; background: var(--bg); border-radius: 50%; }
+.db-donut-center { position: absolute; inset: 24%; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.db-donut-center b { font-size: 16px; }
+.db-donut-center span { font-size: 10px; color: var(--muted); }
+.db-legend { width: 100%; display: flex; flex-direction: column; gap: 9px; }
+.db-legend-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
+.db-legend-row em { font-style: normal; color: var(--muted); }
+.db-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 8px; }
+@media (max-width: 1100px) {
+  .db-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .db-grid { grid-template-columns: minmax(0, 1fr); }
+  .db-card, .db-card.db-wide { grid-column: auto; }
+}
+

@@ -7,6 +7,7 @@ import { url, currentPath, onLeave } from '../core/router.js';
 
 const NAV = [
   { path: '/', label: 'Обзор', icon: icons.panel },
+  { path: '/dashboard', label: 'Дашборд', icon: icons.chart },
   { path: '/bikes', label: 'Байки', icon: icons.bike },
   { path: '/repairs', label: 'Обслуживание', icon: icons.wrench },
   { path: '/rentals', label: 'Аренды', icon: icons.history },
