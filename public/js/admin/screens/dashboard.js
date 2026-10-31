@@ -83,7 +83,7 @@ export async function deskDashboard() {
         ${d.couriers.length ? `<ol class="db-rank">
           ${d.couriers.map((c, i) => `
             <li class="${i < 3 ? 'top' : ''}">
-              <span><b>${i + 1}.</b>${esc(c.name)}</span>
+              <span><b>${i + 1}.</b>${esc(c.name.split(' ')[0])}</span>
               <em class="${c.revenue ? '' : 'zero'}">${rub(c.revenue)}</em>
             </li>`).join('')}
         </ol>` : '<div class="empty">Курьеров пока нет</div>'}
