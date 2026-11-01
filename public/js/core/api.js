@@ -4,6 +4,7 @@ import { goLogin } from './router.js';
 export async function api(method, url, body) {
   const res = await fetch(url, {
     method,
+    cache: 'no-store',
     headers: body ? { 'Content-Type': 'application/json' } : {},
     body: body ? JSON.stringify(body) : undefined,
   });
