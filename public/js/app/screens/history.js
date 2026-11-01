@@ -16,10 +16,24 @@ const item = r => `
       ${r.endedAt ? payTag(r) : ''}</div>
   </div>`;
 
+const fineItem = f => `
+  <div class="h-item h-fine">
+    <div>
+      <div class="bike">Штраф</div>
+      <div class="meta">${fmtShort(f.createdAt)}<br>${esc(f.comment)}</div>
+    </div>
+    <div class="sum">${rub(f.amount)}</div>
+  </div>`;
+
 export async function screenHistory() {
-  const { rentals } = await api('GET', '/api/rentals');
+  const { rentals, fines } = await api('GET', '/api/rentals');
   const done = rentals.filter(counted);
   const toPay = rentals.filter(r => r.endedAt && r.payStatus === 'pending').reduce((s, r) => s + r.total, 0);
+
+  const timeline = [
+    ...rentals.map(r => ({ date: r.startedAt, html: item(r) })),
+    ...fines.map(f => ({ date: f.createdAt, html: fineItem(f) })),
+  ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   $app.innerHTML = `
     <section class="screen yellow-top with-tabs">
@@ -31,7 +45,7 @@ export async function screenHistory() {
           <div class="stat"><b>${rub(toPay)}</b><span>оплатить</span></div>
         </div>
         <div class="history">
-          ${rentals.length ? rentals.map(item).join('') : '<div class="empty">Пока нет ни одной аренды</div>'}
+          ${timeline.length ? timeline.map(t => t.html).join('') : '<div class="empty">Пока нет ни одной аренды</div>'}
         </div>
         <p class="history-note">Данные за последние 30 дней</p>
       </div>

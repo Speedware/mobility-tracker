@@ -64,6 +64,19 @@ db.exec(`
     hidden INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, bike_id)
   );
+  CREATE TABLE IF NOT EXISTS fines (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    amount INTEGER NOT NULL,
+    comment TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS expenses (
+    id INTEGER PRIMARY KEY,
+    amount INTEGER NOT NULL,
+    comment TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
   CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 `);
 

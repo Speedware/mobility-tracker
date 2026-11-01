@@ -143,6 +143,7 @@ body { background: #1C1C1C; }
 .h-item .sum { text-align: right; white-space: nowrap; font-weight: 600; }
 .h-item .sum small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 4px; }
 .h-item .sum .tag { margin-top: 6px; }
+.h-fine .bike, .h-fine .sum { color: var(--danger); }
 .history-note { margin: 16px 0 0; font-size: 12px; color: var(--muted); text-align: center; }
 
 .section { margin-top: 30px; }

@@ -7,6 +7,7 @@ import { deskDashboard } from './screens/dashboard.js';
 import { deskBikes } from './screens/bikes.js';
 import { deskRepairs } from './screens/repairs.js';
 import { deskRentals } from './screens/rentals.js';
+import { deskFinance } from './screens/finance.js';
 import { deskCouriers } from './screens/couriers.js';
 import { deskCourier } from './screens/courier.js';
 import { deskSettings } from './screens/settings.js';
@@ -18,6 +19,7 @@ const routes = [
   [/^\/bikes$/, deskBikes],
   [/^\/repairs$/, deskRepairs],
   [/^\/rentals$/, deskRentals],
+  [/^\/finance$/, deskFinance],
   [/^\/couriers$/, deskCouriers],
   [/^\/couriers\/(\d+)$/, deskCourier],
   [/^\/settings$/, deskSettings],

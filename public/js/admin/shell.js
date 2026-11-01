@@ -11,6 +11,7 @@ const NAV = [
   { path: '/bikes', label: 'Байки', icon: icons.bike },
   { path: '/repairs', label: 'Обслуживание', icon: icons.wrench },
   { path: '/rentals', label: 'Аренды', icon: icons.history },
+  { path: '/finance', label: 'Финансы', icon: icons.coins },
   { path: '/couriers', label: 'Курьеры', icon: icons.users },
   { path: '/settings', label: 'Настройки', icon: icons.settings },
 ];

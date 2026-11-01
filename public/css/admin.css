@@ -50,6 +50,7 @@ body { background: #1F1F1F; }
 
 .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 22px; }
 .kpis-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 20px; }
+.kpis-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 20px; }
 .kpi { background: var(--bg); border-radius: 16px; padding: 14px 18px; border: 1px solid #383838; }
 .kpi span { display: block; font-size: 13px; color: var(--muted); }
 .kpi b { display: block; font-family: var(--display); font-size: 26px; color: var(--yellow); margin-top: 6px; white-space: nowrap; }
@@ -92,6 +93,11 @@ body { background: #1F1F1F; }
 .d-table tr.rejected td, .d-table tr.rejected .y { color: var(--off); }
 .d-table tr.rejected td.num b { text-decoration: line-through; }
 .d-person { display: flex; align-items: center; gap: 10px; }
+
+.d-card-block { margin-bottom: 24px; }
+.d-card-block:last-child { margin-bottom: 0; }
+.d-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.d-card-head h2 { margin: 0; font-size: 17px; font-weight: 500; }
 
 .d-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .d-search { width: 320px; height: 42px; }

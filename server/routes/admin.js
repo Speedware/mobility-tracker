@@ -66,11 +66,15 @@ module.exports = route => {
       ? fleet.reduce((s, b) => s + (usedDays[b.id]?.size || 0) / elapsed * 100, 0) / fleet.length
       : 0;
 
-    const expenses = Math.round(revenue * PLATFORM_FEE_RATE);
+    const weekSum = table => db.prepare(`SELECT COALESCE(SUM(amount), 0) AS n FROM ${table} WHERE created_at >= ? AND created_at < ?`)
+      .get(start.toISOString(), end.toISOString()).n;
+    const commission = Math.round(revenue * PLATFORM_FEE_RATE);
+    const expenses = weekSum('expenses');
+    const fines = weekSum('fines');
     send(res, 200, {
       from: start.toISOString(),
       to: new Date(end.getTime() - 1).toISOString(),
-      revenue, expenses, profit: revenue - expenses,
+      revenue, expenses, profit: revenue - commission - expenses + fines,
       planTarget: WEEK_PLAN_TARGET,
       load,
       days,
@@ -283,5 +287,51 @@ module.exports = route => {
     const b = await readJson(req);
     if ('registrationOpen' in b) setRegistrationOpen(b.registrationOpen);
     send(res, 200, { registrationOpen: registrationOpen() });
+  }, ADMIN);
+
+  const parseAmount = v => {
+    const n = Number(v);
+    if (!Number.isInteger(n) || n < 1 || n > 1000000) throw new HttpError(400, 'Сумма — целое число от 1 до 1 000 000 ₽');
+    return n;
+  };
+
+  route('GET', '/api/admin/finance', (req, res) => {
+    const fines = db.prepare(`
+      SELECT f.id, f.user_id AS userId, u.name AS userName, f.amount, f.comment, f.created_at AS createdAt
+      FROM fines f JOIN users u ON u.id = f.user_id ORDER BY f.created_at DESC`).all();
+    const expenses = db.prepare('SELECT id, amount, comment, created_at AS createdAt FROM expenses ORDER BY created_at DESC').all();
+    send(res, 200, { fines, expenses });
+  }, ADMIN);
+
+  route('POST', '/api/admin/finance/fines', async (req, res) => {
+    const b = await readJson(req);
+    const c = db.prepare('SELECT id FROM users WHERE id = ?').get(Number(b.userId));
+    if (!c) throw new HttpError(404, 'Курьер не найден');
+    const amount = parseAmount(b.amount);
+    const comment = str(b.comment, 300);
+    if (!comment) throw new HttpError(400, 'Укажите причину штрафа');
+    db.prepare('INSERT INTO fines (user_id, amount, comment, created_at) VALUES (?, ?, ?, ?)').run(c.id, amount, comment, now());
+    send(res, 201, { ok: true });
+  }, ADMIN);
+
+  route('DELETE', /^\/api\/admin\/finance\/fines\/(\d+)$/, (req, res, user, [id]) => {
+    const r = db.prepare('DELETE FROM fines WHERE id = ?').run(Number(id));
+    if (!r.changes) throw new HttpError(404, 'Штраф не найден');
+    send(res, 200, { ok: true });
+  }, ADMIN);
+
+  route('POST', '/api/admin/finance/expenses', async (req, res) => {
+    const b = await readJson(req);
+    const amount = parseAmount(b.amount);
+    const comment = str(b.comment, 300);
+    if (!comment) throw new HttpError(400, 'Укажите статью расхода');
+    db.prepare('INSERT INTO expenses (amount, comment, created_at) VALUES (?, ?, ?)').run(amount, comment, now());
+    send(res, 201, { ok: true });
+  }, ADMIN);
+
+  route('DELETE', /^\/api\/admin\/finance\/expenses\/(\d+)$/, (req, res, user, [id]) => {
+    const r = db.prepare('DELETE FROM expenses WHERE id = ?').run(Number(id));
+    if (!r.changes) throw new HttpError(404, 'Расход не найден');
+    send(res, 200, { ok: true });
   }, ADMIN);
 };
