@@ -1,8 +1,8 @@
-const { db, now, registrationOpen, setRegistrationOpen } = require('../db');
+const { db, now, registrationOpen, setRegistrationOpen, weekPlanTarget, setWeekPlanTarget } = require('../db');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { ADMIN_EMAIL, PAY_STATUSES, BIKE_AVAILABILITY, UPLOADS_DIR, BIKE_PHOTO_MAX, WEEK_PLAN_TARGET, PLATFORM_FEE_RATE } = require('../config');
+const { ADMIN_EMAIL, PAY_STATUSES, BIKE_AVAILABILITY, UPLOADS_DIR, BIKE_PHOTO_MAX, PLATFORM_FEE_RATE } = require('../config');
 const { HttpError, send, readJson, str, isEmail, parsePhoto } = require('../lib/http');
 const { hashPassword, isAdmin, dropSessions } = require('../lib/auth');
 const { bikeImage, bikeList, personalTerms, RENTAL_FIELDS, rentalRow } = require('../services/fleet');
@@ -75,7 +75,7 @@ module.exports = route => {
       from: start.toISOString(),
       to: new Date(end.getTime() - 1).toISOString(),
       revenue, expenses, profit: revenue - commission - expenses + fines,
-      planTarget: WEEK_PLAN_TARGET,
+      planTarget: weekPlanTarget(),
       load,
       days,
       couriers: [...byCourier.values()].sort((a, b) => b.revenue - a.revenue),
@@ -283,13 +283,18 @@ module.exports = route => {
   }, ADMIN);
 
   route('GET', '/api/admin/settings', (req, res) => {
-    send(res, 200, { registrationOpen: registrationOpen() });
+    send(res, 200, { registrationOpen: registrationOpen(), planTarget: weekPlanTarget() });
   }, ADMIN);
 
   route('PATCH', '/api/admin/settings', async (req, res) => {
     const b = await readJson(req);
     if ('registrationOpen' in b) setRegistrationOpen(b.registrationOpen);
-    send(res, 200, { registrationOpen: registrationOpen() });
+    if ('planTarget' in b) {
+      const n = Number(b.planTarget);
+      if (!Number.isInteger(n) || n < 1 || n > 1000000) throw new HttpError(400, 'Цель — целое число от 1 до 1 000 000 ₽');
+      setWeekPlanTarget(n);
+    }
+    send(res, 200, { registrationOpen: registrationOpen(), planTarget: weekPlanTarget() });
   }, ADMIN);
 
   const parseAmount = v => {

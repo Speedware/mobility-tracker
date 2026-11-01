@@ -61,7 +61,7 @@ export async function deskDashboard() {
   deskShell('/dashboard', 'Дашборд', `
     <div class="db-kpis">
       ${kpi(icons.ruble, 'Прибыль', rub(d.profit))}
-      ${kpi(icons.target, 'План', `${planPct} %`, `Цель: ${rub(d.planTarget)}`)}
+      ${kpi(icons.target, 'План', `${planPct} %`)}
       ${kpi(icons.wallet, 'Выручка', rub(d.revenue))}
       ${kpi(icons.box, 'Расходы', rub(d.expenses))}
       ${kpi(icons.bike, 'Нагрузка байков', `${d.load.toFixed(1)} %`)}

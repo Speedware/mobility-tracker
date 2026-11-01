@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
-const { DATA_DIR } = require('./config');
+const { DATA_DIR, WEEK_PLAN_TARGET } = require('./config');
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 const db = new DatabaseSync(path.join(DATA_DIR, 'mobility.db'));
@@ -113,7 +113,9 @@ const setSetting = (key, value) => db.prepare(
   'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, String(value));
 const registrationOpen = () => getSetting('registration_open', '1') === '1';
 const setRegistrationOpen = open => setSetting('registration_open', open ? '1' : '0');
+const weekPlanTarget = () => Number(getSetting('week_plan_target', WEEK_PLAN_TARGET));
+const setWeekPlanTarget = n => setSetting('week_plan_target', n);
 
 const now = () => new Date().toISOString();
 
-module.exports = { db, now, registrationOpen, setRegistrationOpen };
+module.exports = { db, now, registrationOpen, setRegistrationOpen, weekPlanTarget, setWeekPlanTarget };
