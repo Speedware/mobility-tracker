@@ -40,7 +40,7 @@ module.exports = route => {
       WHERE r.user_id = ? AND (r.ended_at IS NULL OR r.started_at >= ?)
       ORDER BY r.started_at DESC`).all(user.id, since);
     const fines = db.prepare(`
-      SELECT id, amount, comment, created_at AS createdAt FROM fines
+      SELECT id, amount, comment, created_at AS createdAt, pay_status AS payStatus FROM fines
       WHERE user_id = ? AND created_at >= ? ORDER BY created_at DESC`).all(user.id, since);
     send(res, 200, { rentals: rows.map(rentalRow), fines });
   });

@@ -21,6 +21,8 @@ const PAY_TAG_CLASS = { pending: 'tag-wait', paid: 'tag-free', rejected: 'tag-re
 
 export const counted = r => r.endedAt && r.payStatus !== 'rejected';
 
+export const payStatusTag = status => `<span class="tag ${PAY_TAG_CLASS[status]}">${PAY_STATUSES[status]}</span>`;
+
 export const payTag = r => (!r.endedAt ? '<span class="tag tag-busy">идёт</span>'
   : r.closedByBlock ? '<span class="tag tag-repair">Закрыта блокировкой</span>'
-  : `<span class="tag ${PAY_TAG_CLASS[r.payStatus]}">${PAY_STATUSES[r.payStatus]}</span>`);
+  : payStatusTag(r.payStatus));

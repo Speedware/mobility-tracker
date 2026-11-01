@@ -10,8 +10,14 @@ let filter = 'all';
 const FILTERS = [['all', 'Все'], ['pending', 'Ждут оплаты'], ['paid', 'Оплачено'], ['rejected', 'Отклонено']];
 const sum = list => list.reduce((s, r) => s + r.total, 0);
 
+const normalizeFine = f => ({
+  id: f.id, kind: 'fine', userName: f.userName, bike: 'Штраф', comment: f.comment,
+  startedAt: f.createdAt, endedAt: f.createdAt, orders: null, rate: null, total: f.amount,
+  payStatus: f.payStatus, closedByBlock: false,
+});
+
 const payCell = r => (r.endedAt && !r.closedByBlock
-  ? `<select class="pay-select" data-pay="${r.id}" data-status="${r.payStatus}" aria-label="Статус оплаты">
+  ? `<select class="pay-select" data-pay="${r.id}" data-kind="${r.kind}" data-status="${r.payStatus}" aria-label="Статус оплаты">
       ${Object.entries(PAY_STATUSES).map(([k, v]) => `<option value="${k}" ${k === r.payStatus ? 'selected' : ''}>${v}</option>`).join('')}
     </select>`
   : payTag(r));
@@ -20,25 +26,30 @@ const row = r => `<tr class="${r.endedAt && r.payStatus === 'rejected' ? 'reject
   <td>${esc(r.userName)}</td>
   <td><b class="y">${esc(r.bike)}</b></td>
   <td class="nowrap">${fmtDate(r.startedAt)}</td>
-  <td class="nowrap">${r.endedAt ? between(r.startedAt, r.endedAt) : `<span data-since="${r.startedAt}">${since(r.startedAt)}</span>`}</td>
-  <td class="num">${r.endedAt ? r.orders : '—'}</td>
-  <td class="num">Flex ${r.rate} ₽</td>
+  <td class="nowrap">${r.kind === 'fine' ? '—' : r.endedAt ? between(r.startedAt, r.endedAt) : `<span data-since="${r.startedAt}">${since(r.startedAt)}</span>`}</td>
+  <td class="num">${r.kind === 'fine' ? '—' : r.endedAt ? r.orders : '—'}</td>
+  <td class="${r.kind === 'fine' ? '' : 'num'}">${r.kind === 'fine' ? esc(r.comment) : `Flex ${r.rate} ₽`}</td>
   <td class="num"><b>${r.endedAt ? rub(r.total) : '—'}</b></td>
   <td class="nowrap">${payCell(r)}</td>
-  <td class="num nowrap">${r.endedAt ? `<button class="btn btn-outline d-small" data-edit="${r.id}">Изменить</button>` : ''}
-    <button class="desk-icon-btn d-del" data-del="${r.id}" title="Удалить аренду" aria-label="Удалить аренду">${icons.trash}</button></td>
+  <td class="num nowrap">${r.kind !== 'fine' && r.endedAt ? `<button class="btn btn-outline d-small" data-edit="${r.id}">Изменить</button>` : ''}
+    <button class="desk-icon-btn d-del" data-del="${r.id}" data-kind="${r.kind}" title="Удалить" aria-label="Удалить">${icons.trash}</button></td>
 </tr>`;
 
 export async function deskRentals() {
-  const { rentals } = await api('GET', '/api/admin/rentals');
-  const byStatus = st => rentals.filter(r => r.endedAt && r.payStatus === st);
-  const list = filter === 'all' ? rentals : byStatus(filter);
+  const { rentals, fines } = await api('GET', '/api/admin/rentals');
+  const items = [
+    ...rentals.map(r => ({ ...r, kind: 'rental' })),
+    ...fines.map(normalizeFine),
+  ].sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt));
+
+  const byStatus = st => items.filter(r => r.endedAt && r.payStatus === st);
+  const list = filter === 'all' ? items : byStatus(filter);
   const pending = byStatus('pending');
-  const byId = id => rentals.find(r => r.id === Number(id));
+  const byId = (id, kind) => items.find(r => r.id === Number(id) && r.kind === kind);
 
   deskShell('/rentals', 'Аренды', `
     <div class="kpis kpis-3">
-      <div class="kpi"><span>Начислено всего</span><b>${rub(sum(rentals.filter(counted)))}</b></div>
+      <div class="kpi"><span>Начислено всего</span><b>${rub(sum(items.filter(counted)))}</b></div>
       <div class="kpi ${pending.length ? 'alert' : ''}"><span>Ждёт оплаты</span><b>${rub(sum(pending))}</b></div>
       <div class="kpi"><span>Оплачено</span><b>${rub(sum(byStatus('paid')))}</b></div>
     </div>
@@ -56,14 +67,17 @@ export async function deskRentals() {
     </div>`);
 
   $app.querySelectorAll('[data-filter]').forEach(el => { el.onclick = () => { filter = el.dataset.filter; render(); }; });
-  $app.querySelectorAll('[data-edit]').forEach(el => { el.onclick = () => editRental(byId(el.dataset.edit)); });
-  $app.querySelectorAll('[data-del]').forEach(el => { el.onclick = () => deleteRental(byId(el.dataset.del)); });
+  $app.querySelectorAll('[data-edit]').forEach(el => { el.onclick = () => editRental(byId(el.dataset.edit, 'rental')); });
+  $app.querySelectorAll('[data-del]').forEach(el => {
+    el.onclick = () => (el.dataset.kind === 'fine' ? deleteFine(byId(el.dataset.del, 'fine')) : deleteRental(byId(el.dataset.del, 'rental')));
+  });
 
   $app.querySelectorAll('[data-pay]').forEach(el => {
     el.onchange = async () => {
       el.disabled = true;
+      const base = el.dataset.kind === 'fine' ? '/api/admin/finance/fines' : '/api/admin/rentals';
       try {
-        await api('PATCH', `/api/admin/rentals/${el.dataset.pay}`, { payStatus: el.value });
+        await api('PATCH', `${base}/${el.dataset.pay}`, { payStatus: el.value });
         toast(`Статус: ${PAY_STATUSES[el.value]}`);
         render();
       } catch (e) { toast(e.message, true); el.disabled = false; el.value = el.dataset.status; }
@@ -74,6 +88,18 @@ export async function deskRentals() {
     const q = e.target.value.trim().toLowerCase();
     $app.querySelectorAll('#rentals tbody tr').forEach(tr => { tr.hidden = !!q && !tr.dataset.q.includes(q); });
   };
+}
+
+async function deleteFine(f) {
+  if (!await confirmDialog({
+    title: 'Удалить штраф?', text: `${f.userName}, ${rub(f.total)}, ${fmtDate(f.startedAt)}. Восстановить его будет нельзя.`,
+    ok: 'Удалить', danger: true,
+  })) return;
+  try {
+    await api('DELETE', `/api/admin/finance/fines/${f.id}`);
+    toast('Штраф удалён');
+    render();
+  } catch (e) { toast(e.message, true); }
 }
 
 async function deleteRental(r) {

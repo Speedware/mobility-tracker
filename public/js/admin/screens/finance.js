@@ -2,16 +2,22 @@ import { toast, openModal, onSubmit, confirmDialog } from '../../core/ui.js';
 import { api } from '../../core/api.js';
 import { esc, rub, fmtDate } from '../../core/format.js';
 import { icons } from '../../core/icons.js';
+import { PAY_STATUSES } from '../../core/domain.js';
 import { render } from '../../core/router.js';
 import { deskShell } from '../shell.js';
 
 const sum = list => list.reduce((s, r) => s + r.amount, 0);
 
-const fineRow = f => `<tr>
+const payCell = (r, label) => `<select class="pay-select" data-pay="${r.id}" data-status="${r.payStatus}" aria-label="Статус оплаты — ${label}">
+  ${Object.entries(PAY_STATUSES).map(([k, v]) => `<option value="${k}" ${k === r.payStatus ? 'selected' : ''}>${v}</option>`).join('')}
+</select>`;
+
+const fineRow = f => `<tr class="${f.payStatus === 'rejected' ? 'rejected' : ''}">
   <td class="nowrap">${fmtDate(f.createdAt)}</td>
   <td><b class="y">${esc(f.userName)}</b></td>
   <td class="num"><b>${rub(f.amount)}</b></td>
   <td class="wrap">${esc(f.comment)}</td>
+  <td class="nowrap">${payCell(f, 'штраф')}</td>
   <td class="num"><button class="desk-icon-btn d-del" data-del-fine="${f.id}" title="Удалить штраф" aria-label="Удалить штраф">${icons.trash}</button></td>
 </tr>`;
 
@@ -30,7 +36,7 @@ export async function deskFinance() {
 
   deskShell('/finance', 'Финансы', `
     <div class="kpis kpis-2">
-      <div class="kpi"><span>Штрафов начислено</span><b>${rub(sum(fines))}</b></div>
+      <div class="kpi"><span>Штрафов начислено</span><b>${rub(sum(fines.filter(f => f.payStatus !== 'rejected')))}</b></div>
       <div class="kpi"><span>Расходов всего</span><b>${rub(sum(expenses))}</b></div>
     </div>
 
@@ -38,7 +44,7 @@ export async function deskFinance() {
       <h2 class="d-card-title">Штрафы курьерам</h2>
       <div class="d-card">
         ${fines.length ? `<table class="d-table">
-          <thead><tr><th>Дата</th><th>Курьер</th><th class="num">Сумма</th><th>Комментарий</th><th></th></tr></thead>
+          <thead><tr><th>Дата</th><th>Курьер</th><th class="num">Сумма</th><th>Комментарий</th><th>Оплата</th><th></th></tr></thead>
           <tbody>${fines.map(fineRow).join('')}</tbody>
         </table>` : '<div class="empty">Штрафов пока не было</div>'}
       </div>
@@ -56,6 +62,17 @@ export async function deskFinance() {
     `<button class="btn btn-primary d-add" id="add-operation">${icons.plus}Добавить операцию</button>`);
 
   document.getElementById('add-operation').onclick = () => createOperation(couriers);
+
+  document.querySelectorAll('[data-pay]').forEach(el => {
+    el.onchange = async () => {
+      el.disabled = true;
+      try {
+        await api('PATCH', `/api/admin/finance/fines/${el.dataset.pay}`, { payStatus: el.value });
+        toast(`Статус: ${PAY_STATUSES[el.value]}`);
+        render();
+      } catch (e) { toast(e.message, true); el.disabled = false; el.value = el.dataset.status; }
+    };
+  });
 
   document.querySelectorAll('[data-del-fine]').forEach(el => {
     el.onclick = async () => {

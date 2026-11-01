@@ -69,7 +69,8 @@ db.exec(`
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     amount INTEGER NOT NULL,
     comment TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    pay_status TEXT NOT NULL DEFAULT 'pending'
   );
   CREATE TABLE IF NOT EXISTS expenses (
     id INTEGER PRIMARY KEY,
@@ -93,6 +94,7 @@ addColumn('bikes', 'availability', "TEXT NOT NULL DEFAULT 'available'");
 if (addColumn('rentals', 'pay_status', "TEXT NOT NULL DEFAULT 'pending'") && hasColumn('rentals', 'paid')) {
   db.exec("UPDATE rentals SET pay_status = 'paid' WHERE paid = 1");
 }
+addColumn('fines', 'pay_status', "TEXT NOT NULL DEFAULT 'pending'");
 
 if (db.prepare('SELECT COUNT(*) AS n FROM bikes').get().n === 0) {
   const seed = [

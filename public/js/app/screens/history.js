@@ -1,7 +1,7 @@
 import { $app } from '../../core/ui.js';
 import { api } from '../../core/api.js';
 import { esc, rub, since, between, fmtShort } from '../../core/format.js';
-import { counted, payTag } from '../../core/domain.js';
+import { counted, payTag, payStatusTag } from '../../core/domain.js';
 import { tabbar } from '../tabbar.js';
 
 const item = r => `
@@ -22,7 +22,7 @@ const fineItem = f => `
       <div class="bike">Штраф</div>
       <div class="meta">${fmtShort(f.createdAt)}<br>${esc(f.comment)}</div>
     </div>
-    <div class="sum">${rub(f.amount)}</div>
+    <div class="sum">${rub(f.amount)}${payStatusTag(f.payStatus)}</div>
   </div>`;
 
 export async function screenHistory() {

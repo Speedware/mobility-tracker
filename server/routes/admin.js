@@ -66,11 +66,11 @@ module.exports = route => {
       ? fleet.reduce((s, b) => s + (usedDays[b.id]?.size || 0) / elapsed * 100, 0) / fleet.length
       : 0;
 
-    const weekSum = table => db.prepare(`SELECT COALESCE(SUM(amount), 0) AS n FROM ${table} WHERE created_at >= ? AND created_at < ?`)
+    const expenses = db.prepare('SELECT COALESCE(SUM(amount), 0) AS n FROM expenses WHERE created_at >= ? AND created_at < ?')
       .get(start.toISOString(), end.toISOString()).n;
+    const fines = db.prepare(`SELECT COALESCE(SUM(amount), 0) AS n FROM fines
+      WHERE pay_status <> 'rejected' AND created_at >= ? AND created_at < ?`).get(start.toISOString(), end.toISOString()).n;
     const commission = Math.round(revenue * PLATFORM_FEE_RATE);
-    const expenses = weekSum('expenses');
-    const fines = weekSum('fines');
     send(res, 200, {
       from: start.toISOString(),
       to: new Date(end.getTime() - 1).toISOString(),
@@ -157,7 +157,10 @@ module.exports = route => {
       SELECT ${RENTAL_FIELDS}, u.name AS userName
       FROM rentals r JOIN bikes b ON b.id = r.bike_id JOIN users u ON u.id = r.user_id
       ORDER BY r.ended_at IS NOT NULL, r.started_at DESC`).all();
-    send(res, 200, { rentals: rows.map(rentalRow) });
+    const fines = db.prepare(`
+      SELECT f.id, u.name AS userName, f.amount, f.comment, f.created_at AS createdAt, f.pay_status AS payStatus
+      FROM fines f JOIN users u ON u.id = f.user_id ORDER BY f.created_at DESC`).all();
+    send(res, 200, { rentals: rows.map(rentalRow), fines });
   }, ADMIN);
 
   route('PATCH', /^\/api\/admin\/rentals\/(\d+)$/, async (req, res, user, [id]) => {
@@ -297,7 +300,7 @@ module.exports = route => {
 
   route('GET', '/api/admin/finance', (req, res) => {
     const fines = db.prepare(`
-      SELECT f.id, f.user_id AS userId, u.name AS userName, f.amount, f.comment, f.created_at AS createdAt
+      SELECT f.id, f.user_id AS userId, u.name AS userName, f.amount, f.comment, f.created_at AS createdAt, f.pay_status AS payStatus
       FROM fines f JOIN users u ON u.id = f.user_id ORDER BY f.created_at DESC`).all();
     const expenses = db.prepare('SELECT id, amount, comment, created_at AS createdAt FROM expenses ORDER BY created_at DESC').all();
     send(res, 200, { fines, expenses });
@@ -312,6 +315,14 @@ module.exports = route => {
     if (!comment) throw new HttpError(400, 'Укажите причину штрафа');
     db.prepare('INSERT INTO fines (user_id, amount, comment, created_at) VALUES (?, ?, ?, ?)').run(c.id, amount, comment, now());
     send(res, 201, { ok: true });
+  }, ADMIN);
+
+  route('PATCH', /^\/api\/admin\/finance\/fines\/(\d+)$/, async (req, res, user, [id]) => {
+    const b = await readJson(req);
+    if (!PAY_STATUSES.includes(b.payStatus)) throw new HttpError(400, 'Некорректный статус оплаты');
+    const r = db.prepare('UPDATE fines SET pay_status = ? WHERE id = ?').run(b.payStatus, Number(id));
+    if (!r.changes) throw new HttpError(404, 'Штраф не найден');
+    send(res, 200, { ok: true });
   }, ADMIN);
 
   route('DELETE', /^\/api\/admin\/finance\/fines\/(\d+)$/, (req, res, user, [id]) => {
