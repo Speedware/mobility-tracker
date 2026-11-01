@@ -22,7 +22,7 @@ const fineItem = f => `
       <div class="bike">Штраф</div>
       <div class="meta">${fmtShort(f.createdAt)}<br>${esc(f.comment)}</div>
     </div>
-    <div class="sum">${rub(f.amount)}${payStatusTag(f.payStatus)}</div>
+    <div class="sum">${rub(f.amount)}<div>${payStatusTag(f.payStatus)}</div></div>
   </div>`;
 
 export async function screenHistory() {
