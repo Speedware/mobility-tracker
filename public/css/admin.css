@@ -96,8 +96,7 @@ body { background: #1F1F1F; }
 
 .d-card-block { margin-bottom: 24px; }
 .d-card-block:last-child { margin-bottom: 0; }
-.d-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-.d-card-head h2 { margin: 0; font-size: 17px; font-weight: 500; }
+.d-card-title { margin: 0 0 12px; font-size: 17px; font-weight: 500; }
 
 .d-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .d-search { width: 320px; height: 42px; }

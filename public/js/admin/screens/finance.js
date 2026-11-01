@@ -35,8 +35,7 @@ export async function deskFinance() {
     </div>
 
     <section class="d-card-block">
-      <div class="d-card-head"><h2>Штрафы курьерам</h2>
-        <button class="btn btn-primary d-small" id="add-fine">${icons.plus}Штраф</button></div>
+      <h2 class="d-card-title">Штрафы курьерам</h2>
       <div class="d-card">
         ${fines.length ? `<table class="d-table">
           <thead><tr><th>Дата</th><th>Курьер</th><th class="num">Сумма</th><th>Комментарий</th><th></th></tr></thead>
@@ -46,18 +45,17 @@ export async function deskFinance() {
     </section>
 
     <section class="d-card-block">
-      <div class="d-card-head"><h2>Расходы</h2>
-        <button class="btn btn-primary d-small" id="add-expense">${icons.plus}Расход</button></div>
+      <h2 class="d-card-title">Расходы</h2>
       <div class="d-card">
         ${expenses.length ? `<table class="d-table">
           <thead><tr><th>Дата</th><th class="num">Сумма</th><th>Комментарий</th><th></th></tr></thead>
           <tbody>${expenses.map(expenseRow).join('')}</tbody>
         </table>` : '<div class="empty">Расходов пока не было</div>'}
       </div>
-    </section>`);
+    </section>`,
+    `<button class="btn btn-primary d-add" id="add-operation">${icons.plus}Добавить операцию</button>`);
 
-  document.getElementById('add-fine').onclick = () => createFine(couriers);
-  document.getElementById('add-expense').onclick = createExpense;
+  document.getElementById('add-operation').onclick = () => createOperation(couriers);
 
   document.querySelectorAll('[data-del-fine]').forEach(el => {
     el.onclick = async () => {
@@ -90,53 +88,42 @@ export async function deskFinance() {
   });
 }
 
-function createFine(couriers) {
+function createOperation(couriers) {
+  let type = 'fine';
   const { card, close } = openModal(`
     <form class="modal-card">
-      <h2>Штраф курьеру</h2>
+      <h2>Новая операция</h2>
+      <div class="seg seg-full">
+        <button type="button" data-type="fine" aria-pressed="true">Штраф</button>
+        <button type="button" data-type="expense" aria-pressed="false">Расход</button>
+      </div>
       <div class="form">
-        <select class="field" name="userId">
+        <select class="field" name="userId" data-courier>
           ${couriers.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}
         </select>
         <input class="field" name="amount" type="number" inputmode="numeric" min="1" max="1000000" placeholder="Сумма, ₽">
-        <textarea class="field" name="comment" placeholder="За что" maxlength="300"></textarea>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-outline" type="button" data-close>Отмена</button>
-        <button class="btn btn-primary" type="submit">Начислить</button>
-      </div>
-    </form>`);
-  card.querySelector('[name=amount]').focus();
-
-  onSubmit(card, async data => {
-    if (!data.comment.trim()) throw new Error('Укажите, за что штраф');
-    await api('POST', '/api/admin/finance/fines', data);
-    close();
-    toast('Штраф начислен');
-    render();
-  });
-}
-
-function createExpense() {
-  const { card, close } = openModal(`
-    <form class="modal-card">
-      <h2>Новый расход</h2>
-      <div class="form">
-        <input class="field" name="amount" type="number" inputmode="numeric" min="1" max="1000000" placeholder="Сумма, ₽">
-        <textarea class="field" name="comment" placeholder="На что" maxlength="300"></textarea>
+        <textarea class="field" name="comment" placeholder="Комментарий" maxlength="300"></textarea>
       </div>
       <div class="modal-actions">
         <button class="btn btn-outline" type="button" data-close>Отмена</button>
         <button class="btn btn-primary" type="submit">Добавить</button>
       </div>
     </form>`);
+  const courierField = card.querySelector('[data-courier]');
+  card.querySelectorAll('[data-type]').forEach(el => {
+    el.onclick = () => {
+      type = el.dataset.type;
+      card.querySelectorAll('[data-type]').forEach(b => b.setAttribute('aria-pressed', String(b === el)));
+      courierField.hidden = type !== 'fine';
+    };
+  });
   card.querySelector('[name=amount]').focus();
 
   onSubmit(card, async data => {
-    if (!data.comment.trim()) throw new Error('Укажите статью расхода');
-    await api('POST', '/api/admin/finance/expenses', data);
+    if (!data.comment.trim()) throw new Error(type === 'fine' ? 'Укажите, за что штраф' : 'Укажите статью расхода');
+    await api('POST', `/api/admin/finance/${type === 'fine' ? 'fines' : 'expenses'}`, data);
     close();
-    toast('Расход добавлен');
+    toast(type === 'fine' ? 'Штраф начислен' : 'Расход добавлен');
     render();
   });
 }
