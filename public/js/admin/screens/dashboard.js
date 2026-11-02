@@ -11,7 +11,6 @@ const BIKE_COLORS = {
 const FALLBACK_COLORS = ['#4DD0C4', '#E873A6', '#9CCC65', '#FFB74D', '#7986CB'];
 const bikeColor = (name, i) => BIKE_COLORS[name.toLowerCase()] || FALLBACK_COLORS[i % FALLBACK_COLORS.length];
 
-const dateShort = iso => new Date(iso).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' });
 const pad = n => String(n).padStart(2, '0');
 const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const mondayOf = d => { const m = new Date(d); m.setHours(0, 0, 0, 0); m.setDate(m.getDate() - ((m.getDay() + 6) % 7)); return m; };
@@ -78,6 +77,12 @@ export async function deskDashboard() {
   const labelEvery = Math.max(1, Math.ceil(d.days.length / 12));
 
   deskShell('/dashboard', 'Дашборд', `
+    <div class="db-range">
+      ${icons.calendar}
+      <input class="field d-date" id="range-from" type="date" value="${range.from}" aria-label="С какой даты">
+      <span class="db-range-sep">—</span>
+      <input class="field d-date" id="range-to" type="date" value="${range.to}" aria-label="По какую дату">
+    </div>
     <div class="db-kpis">
       ${kpi(icons.ruble, 'Прибыль', rub(d.profit))}
       ${kpi(icons.target, 'План', `${planPct} %`)}
@@ -112,15 +117,7 @@ export async function deskDashboard() {
         ${hasBikes ? donut(d.bikes) : '<div class="empty">Завершённых аренд за период нет</div>'}
       </section>
     </div>`,
-    `<div class="db-head-row">
-      <input class="field d-date" id="range-from" type="date" value="${range.from}" aria-label="С какой даты">
-      <span class="db-range-sep">—</span>
-      <input class="field d-date" id="range-to" type="date" value="${range.to}" aria-label="По какую дату">
-      <div class="head-actions db-head">
-        <span class="refresh-note">${dateShort(d.from)} – ${dateShort(d.to)}</span>
-        <button class="btn btn-outline d-small" id="dbExport">Экспорт CSV</button>
-      </div>
-    </div>`);
+    `<button class="btn btn-outline d-small" id="dbExport">Экспорт CSV</button>`);
 
   document.getElementById('dbExport').onclick = () => exportCsv(d);
 
