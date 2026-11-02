@@ -25,9 +25,23 @@ module.exports = route => {
   }, ADMIN);
 
   route('GET', '/api/admin/dashboard', (req, res) => {
-    const start = new Date(); start.setHours(0, 0, 0, 0);
-    start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // понедельник текущей недели
-    const end = new Date(start); end.setDate(end.getDate() + 7);
+    const query = new URL(req.url, 'http://localhost').searchParams;
+    const fromParam = query.get('from');
+    const toParam = query.get('to');
+    let start, end;
+    if (fromParam || toParam) {
+      start = new Date(`${fromParam}T00:00:00`);
+      const toDate = new Date(`${toParam}T00:00:00`);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(toDate.getTime())) throw new HttpError(400, 'Некорректный период');
+      end = new Date(toDate); end.setDate(end.getDate() + 1); // конец периода не включая следующий день
+      if (end <= start) throw new HttpError(400, 'Дата начала должна быть раньше даты окончания');
+      if ((end - start) / 86400000 > 366) throw new HttpError(400, 'Период не может быть больше 366 дней');
+    } else {
+      start = new Date(); start.setHours(0, 0, 0, 0);
+      start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // понедельник текущей недели
+      end = new Date(start); end.setDate(end.getDate() + 7);
+    }
+    const totalDays = Math.round((end - start) / 86400000);
     const dayIndex = iso => Math.floor((new Date(iso).setHours(0, 0, 0, 0) - start.getTime()) / 86400000 + 0.5);
 
     const rows = db.prepare(`
@@ -37,7 +51,7 @@ module.exports = route => {
       WHERE r.ended_at IS NOT NULL AND r.pay_status <> 'rejected' AND r.ended_at >= ? AND r.ended_at < ?`)
       .all(start.toISOString(), end.toISOString());
 
-    const days = Array(7).fill(0);
+    const days = Array(totalDays).fill(0);
     const byCourier = new Map(db.prepare('SELECT id, name FROM users WHERE blocked = 0 AND lower(email) <> ?')
       .all(ADMIN_EMAIL).map(c => [c.id, { name: c.name, revenue: 0 }]));
     const byBike = {};
@@ -46,7 +60,7 @@ module.exports = route => {
     for (const r of rows) {
       revenue += r.total;
       const i = dayIndex(r.endedAt);
-      if (i >= 0 && i < 7) days[i] += r.total;
+      if (i >= 0 && i < totalDays) days[i] += r.total;
       const c = byCourier.get(r.userId) || { name: r.userName, revenue: 0 };
       c.revenue += r.total;
       byCourier.set(r.userId, c);
@@ -56,11 +70,11 @@ module.exports = route => {
       WHERE started_at < ? AND (ended_at IS NULL OR ended_at >= ?)`).all(end.toISOString(), start.toISOString())) {
       const set = usedDays[r.bikeId] ||= new Set();
       const from = Math.max(0, dayIndex(r.startedAt));
-      const to = Math.min(6, r.endedAt ? dayIndex(r.endedAt) : dayIndex(now()));
+      const to = Math.min(totalDays - 1, r.endedAt ? dayIndex(r.endedAt) : dayIndex(now()));
       for (let i = from; i <= to; i++) set.add(i);
     }
 
-    const elapsed = Math.min(7, dayIndex(now()) + 1);
+    const elapsed = Math.max(1, Math.min(totalDays, dayIndex(now()) + 1));
     const fleet = db.prepare("SELECT id FROM bikes WHERE availability <> 'hidden'").all();
     const load = fleet.length
       ? fleet.reduce((s, b) => s + (usedDays[b.id]?.size || 0) / elapsed * 100, 0) / fleet.length

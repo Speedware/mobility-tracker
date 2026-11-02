@@ -250,6 +250,13 @@ body { background: #1F1F1F; }
 
 /* Дашборд */
 .db-head { align-items: center; }
+.db-head-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.db-range-sep { color: var(--muted); }
+.d-date { width: auto; min-height: 38px; padding: 0 10px; font-size: 14px; }
+@media (max-width: 860px) {
+  .db-head-row { width: 100%; }
+  .db-head-row .db-head { width: 100%; justify-content: space-between; margin-left: auto; }
+}
 .db-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
 .db-kpi-label { display: flex !important; align-items: center; gap: 8px; }
 .db-kpi-label svg { width: 20px; height: 20px; color: var(--yellow); flex: none; }
